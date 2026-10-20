@@ -161,6 +161,10 @@ export interface Project {
   margin: number;
   order: number;
   movements: Movement[];
+  /** Fecha del proyecto entero: si la tiene, todos sus movimientos se aplican de golpe en ella
+   *  (las fechas de cada movimiento se conservan, pero no se usan en la previsión) */
+  dateMode?: MovementDateMode;
+  date?: string | null;
 }
 
 export type Scenario = 'expected' | 'pessimistic' | 'optimistic';

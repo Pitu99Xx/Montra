@@ -1673,3 +1673,11 @@ input.input[type='time']::-webkit-date-and-time-value {
   font-weight: 600;
   color: var(--muted);
 }
+
+.proj-date-card {
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border-color: var(--gold);
+}

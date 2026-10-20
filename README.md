@@ -50,7 +50,8 @@ users/{uid}/entries/{id}         registro: saldo de una cuenta en un momento, co
                                  «Actualizar saldos»
 users/{uid}/projects/{id}        proyecto: nombre, color, selected, margin (%) y sus
                                  movimientos previstos (kind, concept, amount, currency,
-                                 dateMode exact|month|none, date)
+                                 dateMode exact|month|none, date); dateMode/date del
+                                 proyecto, si los tiene, mandan sobre los de los movimientos
 users/{uid}/devices/{id}         tokens de notificaciones
 rates/latest                     tipos de cambio del BCE (los escribe la función)
 ```

@@ -1,5 +1,5 @@
 import type { Project } from '../data/model';
-import { movementTime } from '../data/projects';
+import { movementDateLabel, movementTime, projectHasDate } from '../data/projects';
 import { formatMoney } from '../lib/currency';
 
 const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'];
@@ -31,6 +31,10 @@ export function projectMeta(p: Project): string {
   const parts: string[] = [];
   if (exp) parts.push(`${exp} ${exp === 1 ? 'gasto' : 'gastos'}`);
   if (inc) parts.push(`${inc} ${inc === 1 ? 'ingreso' : 'ingresos'}`);
+  if (projectHasDate(p)) {
+    parts.push(movementDateLabel({ dateMode: p.dateMode!, date: p.date }));
+    return parts.join(' · ');
+  }
   if (!parts.length) return 'Sin movimientos';
   const times = p.movements.map(movementTime).filter((t): t is number => t !== null);
   if (times.length) {

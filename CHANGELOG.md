@@ -2,6 +2,11 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.13.0 · 20 oct 2026
+
+- Proyectos con fecha propia: en «Editar proyecto» puedes darle una fecha exacta o aproximada al proyecto entero. Mientras la tenga, todo el proyecto se suma o resta de golpe en esa fecha en la previsión; las fechas de cada movimiento se conservan (se ven tachadas) pero no cuentan.
+- Al quitar la fecha del proyecto (botón «Quitar» en su ficha o «Ninguna» al editarlo), cada movimiento vuelve a contar en su propia fecha.
+
 ## 1.12.2 · 20 oct 2026
 
 - El resaltado de las filas aparece de una vez: antes, al pasar el ratón (por ejemplo, por los movimientos de un proyecto) se veía primero el rectángulo central y después los bordes hasta las esquinas redondeadas.

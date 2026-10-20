@@ -69,8 +69,21 @@ export function projectTotals(p: Project, scenario: Scenario, valueIn: Convert):
   return { income, expense, net: income - expense, missing };
 }
 
-/** Momento en que se aplica un movimiento en la proyección (los «sin fecha», después del último). */
-export function movementTime(m: Movement): number | null {
+/** Algo con fecha: un movimiento o un proyecto */
+export type Dated = Pick<Movement, 'dateMode' | 'date'>;
+
+/** El proyecto tiene fecha propia (exacta o aproximada) */
+export function projectHasDate(p: Pick<Project, 'dateMode' | 'date'>): boolean {
+  return !!p.date && (p.dateMode === 'exact' || p.dateMode === 'month');
+}
+
+/** Fecha que cuenta para un movimiento: la del proyecto si la tiene; si no, la suya. */
+export function effectiveDate(m: Movement, p: Project): Dated {
+  return projectHasDate(p) ? { dateMode: p.dateMode!, date: p.date } : m;
+}
+
+/** Momento en que se aplica en la proyección (los «sin fecha», después del último). */
+export function movementTime(m: Dated): number | null {
   if (m.dateMode === 'none' || !m.date) return null;
   if (m.dateMode === 'month') {
     const [y, mo] = m.date.split('-').map(Number);
@@ -82,14 +95,14 @@ export function movementTime(m: Movement): number | null {
 const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'];
 
 /** «12 mar 2027», «≈ mar 2027» o «Sin fecha» */
-export function movementDateLabel(m: Movement): string {
+export function movementDateLabel(m: Dated): string {
   if (m.dateMode === 'none' || !m.date) return 'Sin fecha';
   const [y, mo, d] = m.date.split('-').map(Number);
   return m.dateMode === 'month' ? `≈ ${MONTHS[mo - 1]} ${y}` : `${d} ${MONTHS[mo - 1]} ${y}`;
 }
 
 /** Clave de agrupación por mes («2027-03») o «none» */
-export function movementMonth(m: Movement): string {
+export function movementMonth(m: Dated): string {
   return m.dateMode === 'none' || !m.date ? 'none' : m.date.slice(0, 7);
 }
 
@@ -121,7 +134,7 @@ export function buildProjection(projects: Project[], start: number, scenario: Sc
     for (const m of p.movements) {
       const value = movementValue(m, p.margin, scenario, valueIn);
       if (value === null) continue;
-      const t = movementTime(m);
+      const t = movementTime(effectiveDate(m, p));
       items.push({ t: t === null ? null : Math.max(t, now), movement: m, project: p, value });
     }
   }
@@ -139,7 +152,7 @@ export function buildProjection(projects: Project[], start: number, scenario: Sc
       project: i.project,
       value: i.value,
       balance,
-      undated: i.movement.dateMode === 'none' || !i.movement.date,
+      undated: movementTime(effectiveDate(i.movement, i.project)) === null,
     };
   });
   // Un punto por fecha: los movimientos del mismo día (o del mismo mes aproximado) se aplican juntos

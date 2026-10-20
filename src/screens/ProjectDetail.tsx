@@ -7,6 +7,7 @@ import {
   movementDateLabel,
   movementMonth,
   movementTime,
+  projectHasDate,
   movementValue,
   projectTotals,
   saveProject,
@@ -53,6 +54,16 @@ export function ProjectDetail({
     }
     return out;
   }, [project.movements]);
+
+  const dated = projectHasDate(project);
+  const clearDate = async () => {
+    try {
+      await saveProject(uid, { ...project, dateMode: 'none', date: null });
+      toast('Fecha del proyecto quitada', { sub: 'Cada movimiento vuelve a contar en su propia fecha' });
+    } catch {
+      toast('No se pudo guardar el proyecto');
+    }
+  };
 
   const setSelected = async (v: boolean) => {
     try {
@@ -149,6 +160,24 @@ export function ProjectDetail({
           </div>
         </section>
 
+        {dated && (
+          <section className="card proj-date-card">
+            <span className="row-main">
+              <span className="eyebrow">Fecha del proyecto</span>
+              <span style={{ fontSize: 17, fontWeight: 600 }}>
+                {movementDateLabel({ dateMode: project.dateMode!, date: project.date })}
+              </span>
+              <span className="row-sub" style={{ lineHeight: 1.45 }}>
+                En la previsión todo el proyecto se suma o resta de golpe en esta fecha. Las fechas de cada movimiento
+                se conservan, pero no cuentan mientras el proyecto tenga fecha.
+              </span>
+            </span>
+            <button type="button" className="link-btn" onClick={clearDate} style={{ alignSelf: 'flex-start' }}>
+              Quitar
+            </button>
+          </section>
+        )}
+
         {months.length === 0 && (
           <p className="hint">
             Añade los gastos e ingresos que prevés: con su divisa y una fecha exacta, aproximada o sin fecha.
@@ -182,7 +211,12 @@ export function ProjectDetail({
                         className="row-sub"
                         style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                       >
-                        {movementDateLabel(m)}
+                        <span
+                          style={dated ? { textDecoration: 'line-through', opacity: 0.7 } : undefined}
+                          title={dated ? 'No se usa: cuenta la fecha del proyecto' : undefined}
+                        >
+                          {movementDateLabel(m)}
+                        </span>
                         {m.note ? ` · ${m.note}` : ''}
                       </span>
                     </span>

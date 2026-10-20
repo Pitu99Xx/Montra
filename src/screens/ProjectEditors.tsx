@@ -2,7 +2,15 @@ import { useState } from 'react';
 import { Sheet, toast, useSheetExit } from '../components/ui';
 import { IconTrash } from '../components/Icons';
 import { ACCOUNT_COLORS, type Movement, type MovementDateMode, type MovementKind, type Project } from '../data/model';
-import { deleteMovement, deleteProject, newId, saveMovement, saveProject } from '../data/projects';
+import {
+  deleteMovement,
+  deleteProject,
+  movementDateLabel,
+  newId,
+  projectHasDate,
+  saveMovement,
+  saveProject,
+} from '../data/projects';
 import { saveUser } from '../data/actions';
 import { useStore } from '../data/store';
 import { FEATURED, currencySymbol, formatAmount, formatMoney, parseAmount } from '../lib/currency';
@@ -28,8 +36,17 @@ export function ProjectEditor({
     project?.color ?? ACCOUNT_COLORS[(projects.length + 4) % ACCOUNT_COLORS.length].hex,
   );
   const [margin, setMargin] = useState(project?.margin ?? 0);
+  // Fecha del proyecto entero (opcional): si la tiene, manda sobre las de sus movimientos
+  const [dateMode, setDateMode] = useState<MovementDateMode>(
+    project?.date && project.dateMode && project.dateMode !== 'none' ? project.dateMode : 'none',
+  );
+  const [exact, setExact] = useState(
+    project?.dateMode === 'exact' && project.date ? project.date : `${nextMonth()}-01`,
+  );
+  const [month, setMonth] = useState(project?.date ? project.date.slice(0, 7) : nextMonth());
   const [busy, setBusy] = useState(false);
-  const valid = name.trim().length > 0;
+  const date = dateMode === 'exact' ? exact : dateMode === 'month' ? month : null;
+  const valid = name.trim().length > 0 && (dateMode === 'none' || !!date);
 
   const save = async () => {
     if (!valid) return;
@@ -43,6 +60,8 @@ export function ProjectEditor({
         selected: project?.selected ?? true,
         order: project?.order ?? (projects.length ? Math.max(...projects.map((p) => p.order)) + 1 : 0),
         movements: project?.movements ?? [],
+        dateMode,
+        date,
       });
       close();
       if (!project) onCreated?.(id);
@@ -111,6 +130,44 @@ export function ProjectEditor({
             />
           ))}
         </div>
+      </div>
+
+      <div className="field">
+        <span className="label">Fecha del proyecto</span>
+        <div className="segmented" role="group" aria-label="Fecha del proyecto" style={{ background: 'var(--bg)' }}>
+          <button type="button" aria-pressed={dateMode === 'none'} onClick={() => setDateMode('none')}>
+            Ninguna
+          </button>
+          <button type="button" aria-pressed={dateMode === 'exact'} onClick={() => setDateMode('exact')}>
+            Exacta
+          </button>
+          <button type="button" aria-pressed={dateMode === 'month'} onClick={() => setDateMode('month')}>
+            Aproximada
+          </button>
+        </div>
+        {dateMode === 'exact' && (
+          <input
+            className="input"
+            type="date"
+            value={exact}
+            onChange={(e) => setExact(e.target.value)}
+            aria-label="Fecha del proyecto"
+          />
+        )}
+        {dateMode === 'month' && (
+          <input
+            className="input"
+            type="month"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            aria-label="Mes del proyecto"
+          />
+        )}
+        <span className="hint" style={{ padding: 0 }}>
+          {dateMode === 'none'
+            ? 'Cada movimiento cuenta en su propia fecha.'
+            : 'Todo el proyecto se suma o resta de golpe en esta fecha. Las fechas de los movimientos se conservan pero no cuentan; si quitas la fecha del proyecto, vuelven a usarse.'}
+        </span>
       </div>
 
       <div className="field">
@@ -335,6 +392,12 @@ export function MovementEditor({
             onChange={(e) => setMonth(e.target.value)}
             aria-label="Mes"
           />
+        )}
+        {projectHasDate(project) && (
+          <span className="hint" style={{ padding: 0, color: 'var(--gold-text)' }}>
+            El proyecto tiene fecha propia ({movementDateLabel({ dateMode: project.dateMode!, date: project.date })}):
+            esta fecha se guarda, pero en la previsión cuenta la del proyecto.
+          </span>
         )}
         <span className="hint" style={{ padding: 0 }}>
           {dateMode === 'month'

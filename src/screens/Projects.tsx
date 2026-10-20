@@ -3,7 +3,7 @@ import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Too
 import { IconCheck, IconPlus } from '../components/Icons';
 import { toast } from '../components/ui';
 import type { Project, Scenario } from '../data/model';
-import { buildProjection, movementDateLabel, projectTotals, saveProject } from '../data/projects';
+import { buildProjection, effectiveDate, movementDateLabel, projectTotals, saveProject } from '../data/projects';
 import { ProjectIcon, monthYear, projectMeta, signed } from './projectUi';
 import { useStore } from '../data/store';
 import { formatMoney } from '../lib/currency';
@@ -334,7 +334,7 @@ export function ProjectsScreen({
                 {s.movement.concept}
               </span>
               <span className="row-sub">
-                {movementDateLabel(s.movement)} · {s.project.name}
+                {movementDateLabel(effectiveDate(s.movement, s.project))} · {s.project.name}
                 {s.movement.currency !== base && ` · ${formatMoney(s.movement.amount, s.movement.currency)}`}
               </span>
             </span>
