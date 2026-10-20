@@ -7,6 +7,7 @@ import { claimOrCheckOwner, saveUser, type OwnerState } from './data/actions';
 import type { Account, Entry, Reminder, ThemePref } from './data/model';
 import { StoreProvider, useStore } from './data/store';
 import { lockSuppressed } from './lib/lockGuard';
+import { lockOnReturn, lockOnStartup, markActive, markHidden, setGraceMinutes } from './lib/lockTimer';
 import { registerServiceWorker } from './lib/push';
 import { applyUpdate, useNewVersion } from './lib/update';
 import { AccountDetail } from './screens/AccountDetail';
@@ -106,7 +107,7 @@ function wantsUpdate(url: string) {
 
 function Shell({ authUser }: { authUser: User }) {
   const { uid, user, userLoaded, accounts } = useStore();
-  const [locked, setLocked] = useState(true);
+  const [locked, setLocked] = useState(lockOnStartup);
   const [resetPin, setResetPin] = useState(() => {
     try {
       return localStorage.getItem(RESET_PIN_FLAG) === '1';
@@ -164,14 +165,27 @@ function Shell({ authUser }: { authUser: User }) {
     return () => mq.removeEventListener('change', on);
   }, [user.theme, userLoaded]);
 
-  // Bloquear cada vez que la app pasa a segundo plano
+  // Al salir de la app se apunta la hora; al volver se bloquea si pasó el margen elegido en Ajustes
   useEffect(() => {
     const onVis = () => {
-      if (document.visibilityState === 'hidden' && !lockSuppressed()) setLocked(true);
+      if (document.visibilityState === 'hidden') {
+        if (!lockSuppressed()) markHidden();
+        return;
+      }
+      if (lockOnReturn()) setLocked(true);
+      markActive();
     };
     document.addEventListener('visibilitychange', onVis);
-    return () => document.removeEventListener('visibilitychange', onVis);
+    window.addEventListener('pagehide', markHidden);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('pagehide', markHidden);
+    };
   }, []);
+
+  useEffect(() => {
+    if (userLoaded && user.lockAfter !== undefined) setGraceMinutes(user.lockAfter);
+  }, [userLoaded, user.lockAfter]);
 
   // Al tocar un recordatorio: abrir «Actualizar saldos»
   useEffect(() => {

@@ -69,6 +69,8 @@ export interface UserDoc {
   reminderState?: Record<string, string>;
   /** Los puntos antiguos (snapshots) ya se convirtieron en registros */
   entriesMigrated?: boolean;
+  /** Minutos fuera de la app antes de volver a pedir el código (0 = siempre) */
+  lockAfter?: number;
 }
 
 export interface SnapshotAccount {

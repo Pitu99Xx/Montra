@@ -10,6 +10,7 @@ import { useStore } from '../data/store';
 import { biometricAvailable, biometricEnabled, disableBiometric, enableBiometric } from '../lib/biometric';
 import { currencyName, currencySymbol } from '../lib/currency';
 import { withoutLock } from '../lib/lockGuard';
+import { DEFAULT_LOCK_MINUTES, LOCK_OPTIONS, setGraceMinutes } from '../lib/lockTimer';
 import { isIOS, isStandalone } from '../lib/platform';
 import { enablePush } from '../lib/push';
 import { describeDays } from './ReminderEditor';
@@ -135,8 +136,30 @@ export function SettingsScreen({
             <Switch checked={bio} onChange={toggleBio} label="Desbloquear con Face ID" />
           </div>
         )}
+        <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
+          <span className="row-title">Pedir código</span>
+          <div className="segmented" role="group" aria-label="Pedir código" style={{ background: 'var(--bg)' }}>
+            {LOCK_OPTIONS.map((o) => (
+              <button
+                type="button"
+                key={o.minutes}
+                aria-pressed={(user.lockAfter ?? DEFAULT_LOCK_MINUTES) === o.minutes}
+                onClick={() => {
+                  setGraceMinutes(o.minutes);
+                  saveUser(uid, { lockAfter: o.minutes });
+                }}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
-      <p className="hint">El código o Face ID se pedirá cada vez que vuelvas a abrir Montra.</p>
+      <p className="hint">
+        {(user.lockAfter ?? DEFAULT_LOCK_MINUTES) === 0
+          ? 'El código o Face ID se pedirá cada vez que vuelvas a abrir Montra.'
+          : `Si vuelves a Montra antes de ${user.lockAfter ?? DEFAULT_LOCK_MINUTES} ${(user.lockAfter ?? DEFAULT_LOCK_MINUTES) === 1 ? 'minuto' : 'minutos'}, no se pedirá el código.`}
+      </p>
 
       <span className="eyebrow">Preferencias</span>
       <section className="list">

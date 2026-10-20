@@ -2,6 +2,11 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.8.0 · 20 oct 2026
+
+- El código o Face ID ya no se pide cada vez que sales un momento de la app: si vuelves antes de **5 minutos**, entras directamente. También al pulsar «Actualizar» o si iOS cierra la app por detrás.
+- Nuevo ajuste **Ajustes → Seguridad → Pedir código**: al salir, a 1, 5 o 15 minutos.
+
 ## 1.7.1 · 20 oct 2026
 
 - La barra inferior vuelve a dejar siempre el margen de la barra de inicio del iPhone, así sus botones no quedan encima de ella. La 1.6.1 lo quitaba al creer que iOS había recortado la pantalla, y esa detección fallaba.
