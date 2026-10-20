@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { getRedirectResult, onAuthStateChanged, signOut, type User } from 'firebase/auth';
 import { auth } from './firebase';
 import { ToastHost, Spinner } from './components/ui';
@@ -137,13 +137,12 @@ function Shell({ authUser }: { authUser: User }) {
   useEffect(() => {
     if (detailId && !detailAccount && !detailClosing) setDetailId(null);
   }, [detailId, detailAccount, detailClosing]);
-  const scrollRef = useRef<HTMLDivElement>(null);
   // Dirección del deslizamiento al cambiar de pestaña (hacia la derecha o la izquierda)
   const [tabDir, setTabDir] = useState<'from-right' | 'from-left'>('from-right');
   const selectTab = useCallback(
     (next: Tab) => {
       if (next === tab) {
-        scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
       setTabDir(TABS.indexOf(next) > TABS.indexOf(tab) ? 'from-right' : 'from-left');
@@ -153,7 +152,7 @@ function Shell({ authUser }: { authUser: User }) {
   );
 
   useEffect(() => {
-    scrollRef.current?.scrollTo(0, 0);
+    window.scrollTo(0, 0);
   }, [tab]);
 
   useEffect(() => {
@@ -235,7 +234,7 @@ function Shell({ authUser }: { authUser: User }) {
 
   return (
     <div className="app">
-      <div className="app-scroll" ref={scrollRef}>
+      <div className="app-scroll">
         <div key={tab} className={`tab-view ${tabDir}`}>
           {tab === 'cuentas' && (
             <AccountsScreen

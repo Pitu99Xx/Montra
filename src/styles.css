@@ -53,7 +53,17 @@ html,
 body,
 #root {
   margin: 0;
-  height: 100%;
+  min-height: 100%;
+}
+
+/* El fondo del documento es el de la barra inferior: si iOS recorta la parte de abajo de la
+   pantalla (pasa a veces con la app instalada), la franja que queda se funde con la barra. */
+html {
+  background: var(--nav);
+}
+
+body,
+#root {
   background: var(--bg);
 }
 
@@ -99,24 +109,13 @@ a {
 }
 
 .app {
-  /* Pantalla completa fija: solo se desplaza el contenido, nunca la página.
-     Así la barra inferior no se mueve al volver a la app en el iPhone. */
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--app-h, 100dvh);
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .app-scroll {
   flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
 }
 
 .app-scroll > * {
@@ -126,7 +125,7 @@ a {
 
 .screen {
   flex: 1;
-  padding: calc(env(safe-area-inset-top) + 24px) 20px 32px;
+  padding: calc(env(safe-area-inset-top) + 24px) 20px calc(env(safe-area-inset-bottom) + 112px);
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -459,7 +458,10 @@ a {
 
 /* Barra de pestañas */
 .tabbar {
-  flex-shrink: 0;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: var(--nav);
   border-top: 1px solid var(--border);
   padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
@@ -495,10 +497,7 @@ a {
 /* Hoja inferior */
 .sheet-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--app-h, 100dvh);
+  inset: 0;
   background: var(--backdrop);
   z-index: 20;
   display: flex;
@@ -509,7 +508,7 @@ a {
 .sheet {
   width: 100%;
   max-width: 520px;
-  max-height: calc(var(--app-h, 100dvh) - env(safe-area-inset-top) - 24px);
+  max-height: calc(100dvh - env(safe-area-inset-top) - 24px);
   background: var(--surface);
   border-radius: 28px 28px 0 0;
   display: flex;
@@ -520,7 +519,7 @@ a {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  padding: 10px 12px 6px;
+  padding: 4px 12px 6px;
 }
 
 .sheet-head h2 {
@@ -555,12 +554,7 @@ a {
 
 /* Pantallas centradas (login, PIN) */
 .center-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--app-h, 100dvh);
-  overflow-y: auto;
+  min-height: 100dvh;
   background: var(--bg-deep);
   padding: calc(env(safe-area-inset-top) + 56px) 28px calc(env(safe-area-inset-bottom) + 28px);
   display: flex;
@@ -715,11 +709,17 @@ a {
 
 /* Aviso de versión nueva */
 .update-banner {
-  flex-shrink: 0;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom) + 80px);
+  max-width: 496px;
+  z-index: 11;
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 0 12px 8px;
+  margin: 0 auto;
+  width: calc(100% - 24px);
   padding: 10px 10px 10px 16px;
   border-radius: 16px;
   background: var(--surface-2);
@@ -952,10 +952,7 @@ button.row:active {
 /* Vista de detalle (pantalla que entra desde la derecha) */
 .detail-view {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--app-h, 100dvh);
+  inset: 0;
   background: var(--bg);
   z-index: 15;
   overflow-y: auto;
@@ -1002,4 +999,22 @@ button.row:active {
   font-weight: 600;
   color: var(--faint);
   padding: 4px 4px 0;
+}
+
+/* Asa de las hojas: indica que se pueden arrastrar */
+.sheet-grabber {
+  width: 40px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border-strong);
+  margin: 8px auto 0;
+  flex-shrink: 0;
+}
+
+.sheet {
+  will-change: transform;
+}
+
+.sheet-body {
+  overscroll-behavior: contain;
 }

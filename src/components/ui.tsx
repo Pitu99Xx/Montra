@@ -72,6 +72,10 @@ export function Sheet({
   action?: ReactNode;
   children: ReactNode;
 }) {
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -82,12 +86,90 @@ export function Sheet({
       document.body.style.overflow = prev;
     };
   }, [onClose]);
+
+  // Arrastrar hacia abajo para cerrar, como en iOS: desde la cabecera o desde el contenido
+  // cuando ya está arriba del todo. Si se suelta poco, vuelve a su sitio.
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    const body = bodyRef.current;
+    const backdrop = backdropRef.current;
+    if (!sheet || !body || !backdrop) return;
+    let startY = 0;
+    let startT = 0;
+    let dy = 0;
+    let tracking = false;
+    let dragging = false;
+
+    const setPos = (y: number, animate: boolean) => {
+      sheet.style.transition = animate ? 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)' : 'none';
+      backdrop.style.transition = animate ? 'background-color 0.3s ease' : 'none';
+      sheet.style.transform = y > 0 ? `translateY(${y}px)` : '';
+      const fade = Math.min(y / sheet.offsetHeight, 1);
+      backdrop.style.backgroundColor = y > 0 ? `rgba(3, 8, 18, ${0.72 * (1 - fade)})` : '';
+    };
+
+    const onStart = (e: TouchEvent) => {
+      const inBody = body.contains(e.target as Node);
+      tracking = !inBody || body.scrollTop <= 0;
+      dragging = false;
+      dy = 0;
+      startY = e.touches[0].clientY;
+      startT = performance.now();
+    };
+    const onMove = (e: TouchEvent) => {
+      if (!tracking) return;
+      const d = e.touches[0].clientY - startY;
+      if (!dragging) {
+        if (d < -4) {
+          tracking = false; // hacia arriba: es un desplazamiento normal del contenido
+          return;
+        }
+        if (d > 6 && body.scrollTop <= 0) {
+          dragging = true;
+          startY = e.touches[0].clientY;
+          startT = performance.now();
+          (document.activeElement as HTMLElement | null)?.blur?.();
+        } else return;
+      }
+      e.preventDefault();
+      dy = Math.max(0, e.touches[0].clientY - startY);
+      setPos(dy, false);
+    };
+    const onEnd = () => {
+      if (!dragging) return;
+      dragging = false;
+      tracking = false;
+      const velocity = dy / Math.max(1, performance.now() - startT);
+      if (dy > sheet.offsetHeight * 0.28 || (velocity > 0.5 && dy > 40)) onClose();
+      else setPos(0, true);
+    };
+
+    sheet.addEventListener('touchstart', onStart, { passive: true });
+    sheet.addEventListener('touchmove', onMove, { passive: false });
+    sheet.addEventListener('touchend', onEnd);
+    sheet.addEventListener('touchcancel', onEnd);
+    return () => {
+      sheet.removeEventListener('touchstart', onStart);
+      sheet.removeEventListener('touchmove', onMove);
+      sheet.removeEventListener('touchend', onEnd);
+      sheet.removeEventListener('touchcancel', onEnd);
+    };
+  }, [onClose]);
+
   return (
     <div
+      ref={backdropRef}
       className={`sheet-backdrop${closing ? ' closing' : ''}`}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className={`sheet${closing ? ' closing' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
+      <div
+        ref={sheetRef}
+        className={`sheet${closing ? ' closing' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+      >
+        <div className="sheet-grabber" aria-hidden="true" />
         <div className="sheet-head">
           <div>
             <button type="button" className="link-btn" onClick={onClose}>
@@ -97,7 +179,9 @@ export function Sheet({
           <h2>{title}</h2>
           <div className="end">{action}</div>
         </div>
-        <div className="sheet-body">{children}</div>
+        <div className="sheet-body" ref={bodyRef}>
+          {children}
+        </div>
       </div>
     </div>
   );

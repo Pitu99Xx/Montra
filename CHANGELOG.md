@@ -2,6 +2,11 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.6.0 · 20 oct 2026
+
+- Las hojas que suben desde abajo (nueva cuenta, actualizar saldos, registros, recordatorios, divisas) se pueden **arrastrar hacia abajo para cerrarlas**, como en iOS. Si las sueltas a medio camino vuelven a su sitio; el fondo se aclara mientras las arrastras. Tienen un asa arriba que lo indica.
+- **Barra inferior:** se vuelve al diseño de la 1.0 (la página se desplaza y la barra queda fija abajo), que es el que mejor se lleva con iOS. Si iOS recorta la parte de abajo de la pantalla, cosa que pasa a veces con la app instalada, la franja que queda tiene el color de la barra y no se nota.
+
 ## 1.5.0 · 20 oct 2026
 
 - **Historial de registros.** Cada valor que introduces queda guardado con su fecha, hora y origen (saldo inicial, actualización de saldos o editado a mano).
