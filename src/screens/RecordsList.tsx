@@ -26,8 +26,13 @@ export function RecordsList({
   const byId = useMemo(() => new Map(allAccounts.map((a) => [a.id, a])), [allAccounts]);
   const base = user.baseCurrency;
 
+  // «Todas las cuentas»: solo las actualizaciones de saldos (ya incluyen todas las cuentas).
+  // Con una cuenta elegida: todos sus registros, también los sueltos (saldo inicial, ediciones…).
   const groups = useMemo(
-    () => groupEntries(filter ? entries.filter((e) => e.accountId === filter) : entries),
+    () =>
+      filter
+        ? groupEntries(entries.filter((e) => e.accountId === filter))
+        : groupEntries(entries.filter((e) => e.batchId)),
     [entries, filter],
   );
   const totalsByDay = useMemo(() => new Map(series.map((p) => [p.day, p.total])), [series]);
@@ -62,7 +67,7 @@ export function RecordsList({
     <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <span className="eyebrow">Registros</span>
-        <span className="row-sub">Toca una actualización</span>
+        <span className="row-sub">{filter ? 'Todos los registros de la cuenta' : 'Toca una actualización'}</span>
       </div>
       <div className="chips" style={{ flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: 2 }}>
         <button
@@ -88,6 +93,14 @@ export function RecordsList({
           </button>
         ))}
       </div>
+
+      {groups.length === 0 && (
+        <p className="hint">
+          {filter
+            ? 'Esta cuenta aún no tiene registros.'
+            : 'Aún no hay actualizaciones de saldos. Se crean con «Actualizar saldos» en la pestaña Cuentas.'}
+        </p>
+      )}
 
       {groups.slice(0, limit).map((g) => {
         const isOpen = open === g.id;

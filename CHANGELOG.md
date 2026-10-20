@@ -2,6 +2,11 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.7.0 · 20 oct 2026
+
+- Evolución: nuevo periodo **1S** (última semana), con una marca por día en el eje.
+- Registros: con «Todas las cuentas» solo aparecen las actualizaciones de saldos; los registros sueltos de una cuenta (saldo inicial, ediciones a mano) se ven al filtrar por esa cuenta o en su ficha.
+
 ## 1.6.1 · 20 oct 2026
 
 - Editar registro: los campos de fecha y hora ya no se salen del cuadro.

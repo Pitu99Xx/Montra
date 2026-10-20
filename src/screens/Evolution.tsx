@@ -6,6 +6,7 @@ import type { Account, Entry } from '../data/model';
 import { RecordsList } from './RecordsList';
 
 const RANGES = [
+  { id: '1S', days: 7 },
   { id: '1M', days: 31 },
   { id: '3M', days: 92 },
   { id: '6M', days: 183 },
@@ -24,6 +25,10 @@ const loadSel = (): string[] => {
 };
 
 const DAY = 86_400_000;
+const weekdayLabel = (t: number) => {
+  const d = new Date(t);
+  return `${d.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', '')} ${d.getDate()}`;
+};
 const monthLabel = (t: number) => new Date(t).toLocaleDateString('es-ES', { month: 'short' }).replace('.', '');
 const monthYearLabel = (t: number) => {
   const d = new Date(t);
@@ -33,6 +38,15 @@ const monthYearLabel = (t: number) => {
 /** Marcas del eje X que cubren todo el periodo elegido, haya o no registros. */
 function axisFor(start: number, end: number): { ticks: number[]; format: (t: number) => string } {
   const span = end - start;
+  if (span <= 8 * DAY) {
+    // Una semana: una marca por día («mar 14»)
+    const ticks: number[] = [];
+    const d = new Date(start);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 1);
+    for (; d.getTime() <= end; d.setDate(d.getDate() + 1)) ticks.push(d.getTime());
+    return { ticks, format: weekdayLabel };
+  }
   if (span <= 45 * DAY) {
     // Hasta ~1 mes: 5 marcas repartidas con día y mes
     return { ticks: [0, 1, 2, 3, 4].map((i) => start + (span * i) / 4), format: shortDate };
