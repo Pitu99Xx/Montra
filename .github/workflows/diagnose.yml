@@ -1,0 +1,44 @@
+name: Diagnóstico de Firebase
+
+# Se lanza a mano. Solo muestra estado y mensajes de error (sin datos personales):
+# el repositorio es público y estos registros también.
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Credenciales
+        env:
+          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          gcloud auth activate-service-account --key-file="$RUNNER_TEMP/sa.json" >/dev/null 2>&1
+          gcloud config set project montra-832b1 >/dev/null 2>&1
+
+      - name: Funciones
+        run: gcloud functions list --v2 --format="table(name.basename(),state,location,eventTrigger.eventType,eventTrigger.triggerRegion)" || true
+
+      - name: Disparadores de Eventarc
+        run: gcloud eventarc triggers list --location=- --format="table(name.basename(),location,destination.cloudRun.service)" || true
+
+      - name: APIs relevantes
+        run: gcloud services list --enabled --format="value(config.name)" | grep -E "fcm|firebase|eventarc|run|cloudfunctions|firestore" || true
+
+      - name: Avisos y errores del último día
+        run: |
+          gcloud logging read 'severity>=WARNING AND (resource.type="cloud_run_revision" OR resource.type="cloud_function" OR resource.type="eventarc.googleapis.com/Trigger")' \
+            --freshness=1d --limit=60 --order=desc \
+            --format='value(timestamp,resource.labels.service_name,severity,jsonPayload.message,textPayload,protoPayload.status.message)' \
+            | sed -E 's/[A-Za-z0-9_-]{28}/<id>/g' | cut -c1-400 || true
+
+      - name: Ejecuciones de onUserRequest (sin datos)
+        run: |
+          gcloud logging read 'resource.labels.service_name="onuserrequest"' --freshness=1d --limit=30 --order=desc \
+            --format='value(timestamp,severity,jsonPayload.message,textPayload,httpRequest.status)' \
+            | sed -E 's/[A-Za-z0-9_-]{28}/<id>/g' | cut -c1-300 || true
+
+      - name: Borrar credenciales
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
