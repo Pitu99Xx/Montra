@@ -1,0 +1,90 @@
+import type { PinRecord } from '../lib/pin';
+
+export type AccountType = 'corriente' | 'ahorro' | 'inversion' | 'efectivo' | 'otra';
+/** Preparado para el futuro: las cuentas «liability» (tarjetas, préstamos) restan del total. */
+export type AccountKind = 'asset' | 'liability';
+
+export interface Account {
+  id: string;
+  name: string;
+  type: AccountType;
+  kind: AccountKind;
+  currency: string;
+  color: string;
+  balance: number;
+  includeInTotal: boolean;
+  order: number;
+  updatedAt?: Date;
+}
+
+export interface Reminder {
+  id: string;
+  /** 0 = domingo … 6 = sábado */
+  days: number[];
+  /** «HH:MM» en la zona horaria del usuario */
+  time: string;
+  enabled: boolean;
+}
+
+export type ThemePref = 'dark' | 'light' | 'system';
+
+export interface UserDoc {
+  baseCurrency: string;
+  theme: ThemePref;
+  notifications: boolean;
+  timezone: string;
+  reminders: Reminder[];
+  pin?: PinRecord;
+  reminderState?: Record<string, string>;
+}
+
+export interface SnapshotAccount {
+  name: string;
+  color: string;
+  currency: string;
+  balance: number;
+  valueEUR: number | null;
+  included: boolean;
+  kind: AccountKind;
+}
+
+export interface Snapshot {
+  id: string;
+  at: Date;
+  totalEUR: number;
+  rates: Record<string, number>;
+  accounts: Record<string, SnapshotAccount>;
+}
+
+export interface Rates {
+  base: 'EUR';
+  date: string;
+  rates: Record<string, number>;
+}
+
+export const ACCOUNT_TYPES: { id: AccountType; label: string }[] = [
+  { id: 'corriente', label: 'Corriente' },
+  { id: 'ahorro', label: 'Ahorro' },
+  { id: 'inversion', label: 'Inversión' },
+  { id: 'efectivo', label: 'Efectivo' },
+  { id: 'otra', label: 'Otra' },
+];
+
+export const ACCOUNT_COLORS: { hex: string; label: string }[] = [
+  { hex: '#C9A45C', label: 'Oro' },
+  { hex: '#9CC3F5', label: 'Cielo' },
+  { hex: '#7FD1B9', label: 'Menta' },
+  { hex: '#F2A38E', label: 'Coral' },
+  { hex: '#B9A7F2', label: 'Lavanda' },
+  { hex: '#F0A6CA', label: 'Rosa' },
+  { hex: '#E8D5A8', label: 'Arena' },
+  { hex: '#A9B6C9', label: 'Pizarra' },
+];
+
+export const DEFAULT_USER: UserDoc = {
+  baseCurrency: 'EUR',
+  theme: 'dark',
+  notifications: false,
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Madrid',
+  reminders: [],
+};

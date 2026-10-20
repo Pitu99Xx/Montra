@@ -1,0 +1,62 @@
+name: Desplegar en Firebase
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
+
+      - name: Instalar dependencias
+        run: |
+          npm ci
+          npm ci --prefix functions
+
+      - name: Compilar la app
+        run: npm run build
+
+      - name: Credenciales de Firebase
+        env:
+          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SERVICE_ACCOUNT" ]; then echo "::error::Falta el secreto FIREBASE_SERVICE_ACCOUNT"; exit 1; fi
+          printf '%s' "$SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+
+      - name: Preparar el proyecto de Firebase
+        id: ensure
+        run: node scripts/ensure-firebase.mjs
+
+      - name: Desplegar reglas, funciones y web
+        run: |
+          # El primer despliegue de funciones puede fallar mientras Google propaga permisos de Eventarc
+          for attempt in 1 2 3; do
+            npx --yes firebase-tools@14 deploy \
+              --project montra-832b1 \
+              --only "firestore,functions,${{ steps.ensure.outputs.hosting }}" \
+              --force --non-interactive && exit 0
+            echo "Intento $attempt fallido; reintentando en 90 s…"
+            sleep 90
+          done
+          exit 1
+
+      - name: Borrar credenciales
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"

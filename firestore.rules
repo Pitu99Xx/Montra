@@ -1,0 +1,40 @@
+rules_version = '2';
+
+// Montra es una app de un solo usuario: la primera cuenta de Google que entra
+// queda registrada como propietaria en /meta/owner y nadie más puede leer ni escribir.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function ownerDoc() {
+      return /databases/$(database)/documents/meta/owner;
+    }
+    function isOwner() {
+      return signedIn() && exists(ownerDoc()) && get(ownerDoc()).data.uid == request.auth.uid;
+    }
+
+    match /meta/owner {
+      allow read: if signedIn();
+      // Solo se puede reclamar una vez (create no aplica si el documento ya existe)
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid', 'claimedAt'])
+        && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /users/{uid} {
+      allow read, write: if isOwner() && request.auth.uid == uid;
+
+      match /{document=**} {
+        allow read, write: if isOwner() && request.auth.uid == uid;
+      }
+    }
+
+    // Tipos de cambio: los escribe la Cloud Function con privilegios de administrador
+    match /rates/{doc} {
+      allow read: if isOwner();
+      allow write: if false;
+    }
+  }
+}

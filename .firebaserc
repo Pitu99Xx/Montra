@@ -1,0 +1,11 @@
+{
+  "projects": { "default": "montra-832b1" },
+  "targets": {
+    "montra-832b1": {
+      "hosting": {
+        "gestion": ["montra-gestion"],
+        "main": ["montra-832b1"]
+      }
+    }
+  }
+}
