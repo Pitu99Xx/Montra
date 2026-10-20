@@ -2,6 +2,10 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.11.0 · 20 oct 2026
+
+- Registros filtrados por una cuenta: se ven sus registros uno a uno (fecha, origen, saldo y diferencia con el anterior), sin tener que abrir cada actualización. Con una cuenta con subcuentas, cada registro indica de qué subcuenta es. Al tocar uno se abre para corregirlo y se marca su día en la gráfica.
+
 ## 1.10.4 · 20 oct 2026
 
 - Corregido: en divisas sin decimales (como el yen), al guardar un saldo como «176.967» el punto de los miles se leía como decimal y quedaba en 177 ¥. Ahora un punto seguido de grupos de tres cifras se lee como separador de miles.
