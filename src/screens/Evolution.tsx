@@ -80,9 +80,18 @@ const compact = (v: number) => {
   return v.toLocaleString('es-ES', { maximumFractionDigits: 0 });
 };
 
-function rateFor(s: Snapshot, base: string, fallback: Record<string, number> | undefined): number | null {
-  if (base === 'EUR') return 1;
-  return s.rates?.[base] ?? fallback?.[base] ?? null;
+function rateFor(s: Snapshot, code: string, fallback: Record<string, number> | undefined): number | null {
+  if (code === 'EUR') return 1;
+  return s.rates?.[code] ?? fallback?.[code] ?? null;
+}
+
+/** Valor en EUR de una cuenta en un punto; si no se guardó, se calcula con los tipos de ese momento. */
+function accountEUR(s: Snapshot, id: string, fallback: Record<string, number> | undefined): number | null {
+  const acc = s.accounts?.[id];
+  if (!acc) return null;
+  if (acc.valueEUR !== null && acc.valueEUR !== undefined) return acc.valueEUR;
+  const r = rateFor(s, acc.currency, fallback);
+  return r ? acc.balance / r : null;
 }
 
 interface TipProps {
@@ -128,6 +137,14 @@ export function EvolutionScreen() {
     }
   };
 
+  // Si solo se eligen cuentas de una misma divisa extranjera (sin el total), se ven en su propia divisa
+  const selectedAccounts = accounts.filter((a) => sel.includes(a.id));
+  const showTotal = sel.includes('total');
+  const currencies = [...new Set(selectedAccounts.map((a) => a.currency))];
+  const native = !showTotal && currencies.length === 1 && currencies[0] !== base;
+  const unit = native ? currencies[0] : base;
+  const mixesCurrencies = !native && selectedAccounts.some((a) => a.currency !== base);
+
   // El eje X abarca siempre el periodo completo; «Todo» va del primer registro a hoy (mínimo un mes)
   const [start, end] = useMemo(() => {
     const now = Date.now();
@@ -145,16 +162,27 @@ export function EvolutionScreen() {
       .map((s) => {
         const r = rateFor(s, base, rates?.rates);
         const row: Record<string, number | null> = { t: s.at.getTime(), total: r === null ? null : s.totalEUR * r };
-        for (const a of accounts) {
-          const v = s.accounts?.[a.id]?.valueEUR;
-          row[`a_${a.id}`] = v === null || v === undefined || r === null ? null : v * r;
+        let sum: number | null = null;
+        for (const a of selectedAccounts) {
+          let v: number | null;
+          if (native) v = s.accounts?.[a.id]?.balance ?? null;
+          else {
+            const eur = accountEUR(s, a.id, rates?.rates);
+            v = eur === null || r === null ? null : eur * r;
+          }
+          row[`a_${a.id}`] = v;
+          if (v !== null) sum = (sum ?? 0) + v;
         }
+        // Lo que muestra la cifra grande: el total o, sin él, la suma de las cuentas elegidas
+        row.headline = showTotal || selectedAccounts.length === 0 ? row.total : sum;
         return row;
       });
-  }, [snapshots, accounts, start, base, rates]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapshots, sel.join(), accounts, start, base, rates, native]);
 
-  const first = data[0]?.total ?? null;
-  const last = data[data.length - 1]?.total ?? null;
+  const withValue = data.filter((d) => d.headline !== null && d.headline !== undefined);
+  const first = withValue[0]?.headline ?? null;
+  const last = withValue[withValue.length - 1]?.headline ?? null;
   const change = first !== null && last !== null ? last - first : null;
   const pct = change !== null && first ? (change / Math.abs(first)) * 100 : null;
 
@@ -185,20 +213,25 @@ export function EvolutionScreen() {
         <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span className="num" style={{ fontSize: 36, fontWeight: 500 }}>
-              {last !== null ? formatMoney(last, base) : '—'}
+              {last !== null ? formatMoney(last, unit) : '—'}
             </span>
-            {change !== null && data.length > 1 && (
+            {change !== null && withValue.length > 1 && (
               <span style={{ color: 'var(--gold-text)', fontWeight: 600, fontSize: 14 }}>
                 {change >= 0 ? '+' : ''}
-                {formatMoney(change, base)}
+                {formatMoney(change, unit)}
                 {pct !== null &&
                   ` (${pct >= 0 ? '+' : ''}${pct.toLocaleString('es-ES', { maximumFractionDigits: 1 })} %)`}{' '}
-                desde el {shortDate(data[0].t as number)}
+                desde el {shortDate(withValue[0].t as number)}
               </span>
             )}
           </div>
 
-          <div style={{ width: '100%', height: 250, marginLeft: -4, position: 'relative' }}>
+          {/* Al cambiar de periodo o de divisa la gráfica se vuelve a dibujar con animación */}
+          <div
+            key={`${range}-${unit}`}
+            className="chart-anim"
+            style={{ width: '100%', height: 250, marginLeft: -4, position: 'relative' }}
+          >
             {data.length === 0 && (
               <p className="hint" style={{ position: 'absolute', inset: '40% 0 auto', textAlign: 'center' }}>
                 No hay registros en este periodo.
@@ -230,24 +263,23 @@ export function EvolutionScreen() {
                   domain={['auto', 'auto']}
                 />
                 <Tooltip
-                  content={(props) => <ChartTooltip {...(props as unknown as TipProps)} base={base} />}
+                  content={(props) => <ChartTooltip {...(props as unknown as TipProps)} base={unit} />}
                   cursor={{ stroke: 'var(--faint)', strokeDasharray: '3 3' }}
                 />
-                {accounts
-                  .filter((a) => sel.includes(a.id))
-                  .map((a) => (
-                    <Line
-                      key={a.id}
-                      name={a.name}
-                      dataKey={`a_${a.id}`}
-                      stroke={a.color}
-                      strokeWidth={2}
-                      dot={{ r: 2.5, fill: a.color, strokeWidth: 0 }}
-                      activeDot={{ r: 5 }}
-                      isAnimationActive={false}
-                      connectNulls
-                    />
-                  ))}
+                {selectedAccounts.map((a) => (
+                  <Line
+                    key={a.id}
+                    name={a.name}
+                    dataKey={`a_${a.id}`}
+                    stroke={a.color}
+                    strokeWidth={2}
+                    dot={{ r: 2.5, fill: a.color, strokeWidth: 0 }}
+                    activeDot={{ r: 5 }}
+                    animationDuration={700}
+                    animationEasing="ease-out"
+                    connectNulls
+                  />
+                ))}
                 {sel.includes('total') && (
                   <Line
                     name="Total"
@@ -256,7 +288,8 @@ export function EvolutionScreen() {
                     strokeWidth={3}
                     dot={{ r: 3.5, fill: 'var(--gold)', strokeWidth: 0 }}
                     activeDot={{ r: 6, stroke: 'var(--bg)', strokeWidth: 2 }}
-                    isAnimationActive={false}
+                    animationDuration={700}
+                    animationEasing="ease-out"
                     connectNulls
                   />
                 )}
@@ -265,6 +298,9 @@ export function EvolutionScreen() {
           </div>
           <p className="hint" style={{ marginTop: -6 }}>
             Toca o desliza sobre la gráfica para ver el saldo y la fecha de cada actualización.
+            {native && ` Importes en ${unit}.`}
+            {mixesCurrencies &&
+              ` Las cuentas en otra divisa se muestran convertidas a ${base}; selecciónalas solas (sin el total) para verlas en su divisa.`}
           </p>
 
           <span className="eyebrow">Mostrar en la gráfica</span>

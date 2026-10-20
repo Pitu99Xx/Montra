@@ -858,3 +858,14 @@ button.row:active {
     transition-duration: 0.01ms !important;
   }
 }
+
+.chart-anim {
+  animation: chart-in 0.4s var(--ease-out);
+}
+
+@keyframes chart-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

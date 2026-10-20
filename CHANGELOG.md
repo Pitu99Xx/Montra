@@ -2,6 +2,13 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.4.0 · 20 oct 2026
+
+- Evolución: si seleccionas solo cuentas de una misma divisa extranjera (sin el total), la gráfica, la cifra principal y el detalle al tocar se muestran en esa divisa (por ejemplo, en USD).
+- Las cuentas en otra divisa ya no desaparecen al mezclarlas con el total: se muestran convertidas, calculando el valor con el tipo de cambio de cada momento si no estaba guardado.
+- La cifra principal muestra el total o, si no está seleccionado, la suma de las cuentas elegidas.
+- Animación al cambiar de periodo, de divisa o al añadir y quitar líneas: la gráfica se dibuja de izquierda a derecha.
+
 ## 1.3.1 · 20 oct 2026
 
 - Corregida la barra inferior elevada en el iPhone con la app instalada: la app usa ahora la altura real de la pantalla (iOS descontaba la zona de la Dynamic Island). Lo mismo para las hojas y las pantallas de acceso.
