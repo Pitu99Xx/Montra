@@ -2,6 +2,11 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.2.0 · 20 oct 2026
+
+- Evolución: el eje horizontal muestra siempre el periodo completo elegido (1 mes, 3 meses, 6 meses, 1 año), aunque todavía no haya registros en todo ese tiempo. «Todo» va desde el primer registro hasta hoy.
+- Marcas del eje según el periodo: fechas repartidas en 1M, días 1 y 15 en 3M, meses en 6M y cada dos meses en 1A.
+
 ## 1.1.0 · 20 oct 2026
 
 - Aviso «Nueva versión» con botón **Actualizar** cuando se publica una versión nueva.
