@@ -125,7 +125,7 @@ a {
 
 .screen {
   flex: 1;
-  padding: calc(env(safe-area-inset-top) + 24px) 20px calc(env(safe-area-inset-bottom) + 112px);
+  padding: calc(env(safe-area-inset-top) + 24px) 20px calc(env(safe-area-inset-bottom) + 96px);
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -465,7 +465,8 @@ a {
   bottom: 0;
   background: var(--nav);
   border-top: 1px solid var(--border);
-  padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
+  /* Altura parecida a la barra nativa de iOS: los botones quedan justo encima de la barra de inicio */
+  padding: 6px 12px max(calc(env(safe-area-inset-bottom) - 2px), 10px);
   z-index: 10;
 }
 
@@ -478,7 +479,7 @@ a {
 
 .tab {
   min-width: 80px;
-  min-height: 48px;
+  min-height: 46px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -488,7 +489,7 @@ a {
   color: var(--faint);
   background: none;
   border: none;
-  padding: 4px;
+  padding: 3px 4px 2px;
 }
 
 .tab[aria-current='page'] {
@@ -681,7 +682,7 @@ a {
   right: 0;
   margin: 0 auto;
   width: fit-content;
-  bottom: calc(env(safe-area-inset-bottom) + 96px);
+  bottom: calc(env(safe-area-inset-bottom) + 76px);
   background: var(--tooltip-bg);
   color: var(--tooltip-text);
   padding: 12px 18px;
@@ -713,7 +714,7 @@ a {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(env(safe-area-inset-bottom) + 80px);
+  bottom: calc(env(safe-area-inset-bottom) + 66px);
   max-width: 496px;
   z-index: 11;
   display: flex;

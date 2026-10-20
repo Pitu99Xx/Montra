@@ -2,6 +2,10 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.8.1 · 20 oct 2026
+
+- Barra inferior unos 14 pt más baja, con una altura parecida a la de las apps nativas de iOS; los botones siguen por encima de la barra de inicio del iPhone.
+
 ## 1.8.0 · 20 oct 2026
 
 - El código o Face ID ya no se pide cada vez que sales un momento de la app: si vuelves antes de **5 minutos**, entras directamente. También al pulsar «Actualizar» o si iOS cierra la app por detrás.
