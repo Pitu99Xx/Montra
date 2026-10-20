@@ -8,8 +8,9 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 initializeApp();
 const db = getFirestore();
 
-// La región la decide el despliegue (functions/.env) según dónde esté Firestore.
-setGlobalOptions({ region: process.env.FUNCTIONS_REGION || 'europe-west1', maxInstances: 2 });
+// Bélgica: la región europea de referencia de Cloud Functions. Firestore está en Madrid
+// (europe-southwest1) y el disparador de Firestore funciona igual entre ambas.
+setGlobalOptions({ region: 'europe-west1', maxInstances: 2 });
 
 interface Reminder {
   id: string;

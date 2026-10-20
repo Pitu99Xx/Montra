@@ -2,6 +2,10 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.0.1 · 20 oct 2026
+
+- Face ID se lanza solo al volver a la app y ya no muestra «no disponible» cuando iOS rechaza el intento automático; el botón de Face ID sigue funcionando siempre.
+
 ## 1.0.0 · 20 oct 2026
 
 Primera versión.

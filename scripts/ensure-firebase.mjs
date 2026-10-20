@@ -1,6 +1,6 @@
 // Prepara el proyecto de Firebase antes de desplegar (lo ejecuta GitHub Actions).
 // Todo es idempotente: si algo ya está hecho, no lo toca.
-import { appendFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync } from 'node:fs';
 import { GoogleAuth } from 'google-auth-library';
 
 const PROJECT = 'montra-832b1';
@@ -156,11 +156,6 @@ let gestion = false;
   } else warn(`No se pudo leer la política IAM (HTTP ${r.status})`);
 }
 
-// 6. Región de las funciones: la misma que Firestore (las multirregión usan su región principal)
-const region = { eur3: 'europe-west1', nam5: 'us-central1', nam7: 'us-central1' }[location] ?? location;
-writeFileSync('functions/.env', `FUNCTIONS_REGION=${region}\n`);
-ok(`Cloud Functions en ${region}`);
-
 const hosting = gestion ? 'hosting:gestion,hosting:main' : 'hosting:main';
-if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `hosting=${hosting}\nregion=${region}\n`);
+if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `hosting=${hosting}\n`);
 if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Preparación de Firebase\n\n${summary.join('\n\n')}\n`);

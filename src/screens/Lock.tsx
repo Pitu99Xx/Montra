@@ -14,22 +14,36 @@ export function LockScreen({ uid, pin, onUnlock }: { uid: string; pin: PinRecord
   const [attempts, setAttempts] = useState(0);
   const [msg, setMsg] = useState('');
   const bio = biometricEnabled(uid);
-  const tried = useRef(false);
+  const inFlight = useRef(false);
 
-  const tryBiometric = useCallback(async () => {
-    try {
-      const ok = await withoutLock(() => verifyBiometric(uid));
-      if (ok) onUnlock();
-    } catch {
-      setMsg('Face ID no disponible. Usa tu código.');
-    }
-  }, [uid, onUnlock]);
+  // `manual`: lo ha pedido el usuario con el botón. Los intentos automáticos fallan en
+  // silencio, porque iOS los rechaza a veces si no vienen de un toque.
+  const tryBiometric = useCallback(
+    async (manual: boolean) => {
+      if (inFlight.current) return;
+      inFlight.current = true;
+      try {
+        const ok = await withoutLock(() => verifyBiometric(uid));
+        if (ok) onUnlock();
+      } catch {
+        if (manual) setMsg('No se pudo usar Face ID. Inténtalo de nuevo o usa tu código.');
+      } finally {
+        inFlight.current = false;
+      }
+    },
+    [uid, onUnlock]
+  );
 
+  // La pantalla de bloqueo se monta al pasar a segundo plano: se lanza Face ID solo
+  // cuando la app vuelve a estar visible, que es cuando iOS lo permite.
   useEffect(() => {
-    if (bio && !tried.current) {
-      tried.current = true;
-      tryBiometric();
-    }
+    if (!bio) return;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') tryBiometric(false);
+    };
+    onVisible();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, [bio, tryBiometric]);
 
   const check = async (value: string) => {
@@ -66,7 +80,7 @@ export function LockScreen({ uid, pin, onUnlock }: { uid: string; pin: PinRecord
       <p className="muted" style={{ margin: '28px 0 0' }}>
         Introduce tu código
       </p>
-      <PinPad onComplete={check} onBiometric={bio ? tryBiometric : undefined} />
+      <PinPad onComplete={check} onBiometric={bio ? () => tryBiometric(true) : undefined} />
       <p className="error" style={{ marginTop: 20 }} role="alert">
         {msg}
       </p>
