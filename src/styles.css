@@ -1092,3 +1092,10 @@ input.input[type='time']::-webkit-date-and-time-value {
   height: 1.5px;
   background: var(--border-strong);
 }
+
+/* Dentro de las hojas nada se encoge: si no cabe, la hoja se desplaza (antes los botones de abajo se aplastaban) */
+.sheet-body > *,
+.center-screen > *,
+.detail-view > .screen > * {
+  flex-shrink: 0;
+}

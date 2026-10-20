@@ -2,6 +2,10 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.9.1 · 20 oct 2026
+
+- Corregido: en las hojas largas (como «Editar cuenta») los botones de abajo ya no se aplastan; si el contenido no cabe, la hoja se desplaza.
+
 ## 1.9.0 · 20 oct 2026
 
 - **Subcuentas.** Una cuenta puede contener subcuentas (por ejemplo, Revolut con Principal en EUR, Dólares en USD y Compartida en JPY). La cuenta no tiene saldo propio: su saldo es la suma de sus subcuentas, y cada subcuenta mantiene su divisa, color e historial.
