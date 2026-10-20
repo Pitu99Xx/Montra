@@ -2,6 +2,13 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.6.1 · 20 oct 2026
+
+- Editar registro: los campos de fecha y hora ya no se salen del cuadro.
+- En lugar de «Antes», se muestra el registro anterior de la cuenta y la diferencia («Registro anterior (6 oct): 3.200,00 € · +229,52 €»), recalculada al cambiar el valor o la fecha.
+- Los registros convertidos de versiones anteriores muestran su hora original en «Introducido el…».
+- Si iOS recorta la parte de abajo de la pantalla, la franja toma el color de lo que haya encima (barra, hoja o ficha de cuenta) y no se reserva el margen de la barra de inicio, que queda fuera de la vista.
+
 ## 1.6.0 · 20 oct 2026
 
 - Las hojas que suben desde abajo (nueva cuenta, actualizar saldos, registros, recordatorios, divisas) se pueden **arrastrar hacia abajo para cerrarlas**, como en iOS. Si las sueltas a medio camino vuelven a su sitio; el fondo se aclara mientras las arrastras. Tienen un asa arriba que lo indica.

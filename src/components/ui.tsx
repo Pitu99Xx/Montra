@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { currencySymbol } from '../lib/currency';
+import { useBottomBand } from '../lib/viewport';
 
 export function Switch({
   checked,
@@ -72,6 +73,7 @@ export function Sheet({
   action?: ReactNode;
   children: ReactNode;
 }) {
+  useBottomBand('--surface');
   const backdropRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);

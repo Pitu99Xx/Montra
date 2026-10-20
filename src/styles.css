@@ -395,6 +395,7 @@ a {
 
 /* Campos */
 .field {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1017,4 +1018,48 @@ button.row:active {
 
 .sheet-body {
   overscroll-behavior: contain;
+}
+
+/* Fecha y hora: iOS les da un ancho mínimo propio que se sale de la cuadrícula */
+input.input[type='date'],
+input.input[type='time'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  width: 100%;
+  text-align: left;
+  line-height: 48px;
+}
+
+input.input[type='date']::-webkit-date-and-time-value,
+input.input[type='time']::-webkit-date-and-time-value {
+  text-align: left;
+  margin: 0;
+}
+
+/* Vista recortada por iOS: la zona de la barra de inicio no se ve, no hace falta reservarla */
+.ios-clipped .tabbar {
+  padding-bottom: 8px;
+}
+
+.ios-clipped .screen {
+  padding-bottom: 96px;
+}
+
+.ios-clipped .sheet-body,
+.ios-clipped .detail-view > .screen {
+  padding-bottom: 24px;
+}
+
+.ios-clipped .center-screen {
+  padding-bottom: 20px;
+}
+
+.ios-clipped .toast {
+  bottom: 88px;
+}
+
+.ios-clipped .update-banner {
+  bottom: 80px;
 }

@@ -61,7 +61,8 @@ function addEntry(batch: WriteBatch, uid: string, e: NewEntry, rates: Rates | nu
     currency: e.currency,
     source: e.source,
     at: e.at ? Timestamp.fromDate(e.at) : serverTimestamp(),
-    createdAt: serverTimestamp(),
+    // Los registros convertidos de versiones anteriores conservan su hora original
+    createdAt: e.source === 'migrated' && e.at ? Timestamp.fromDate(e.at) : serverTimestamp(),
     rates: rates?.rates ?? null,
     ...(e.batchId ? { batchId: e.batchId } : {}),
     ...(e.note ? { note: e.note } : {}),

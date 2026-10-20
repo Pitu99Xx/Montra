@@ -3,7 +3,7 @@ import { AccountIcon, Sheet, toast, useSheetExit } from '../components/ui';
 import { IconChart, IconTrash } from '../components/Icons';
 import { addManualEntry, deleteEntries, updateEntry } from '../data/actions';
 import { SOURCE_LABEL, type Account, type Entry } from '../data/model';
-import { buildSeries, dayKey } from '../data/series';
+import { buildSeries, dayKey, previousEntry } from '../data/series';
 import { useStore } from '../data/store';
 import { currencySymbol, formatAmount, formatMoney, parseAmount } from '../lib/currency';
 
@@ -41,6 +41,19 @@ export function EntryEditor({
   const valid = amount !== null && !Number.isNaN(at.getTime()) && !future;
   const base = user.baseCurrency;
   const accountEntries = entries.filter((e) => e.accountId === account.id);
+  // Registro anterior de la cuenta respecto a la fecha elegida, para ver la diferencia
+  const prev = Number.isNaN(at.getTime())
+    ? undefined
+    : previousEntry(accountEntries, {
+        id: entry?.id ?? '__nuevo__',
+        accountId: account.id,
+        balance: 0,
+        currency,
+        at,
+        createdAt: entry?.createdAt ?? new Date(),
+        source: 'edit',
+      });
+  const diff = prev && amount !== null && prev.currency === currency ? amount - prev.balance : null;
   const onlyOne = !!entry && accountEntries.length <= 1;
 
   // Vista previa: cómo queda el total de ese día en la gráfica
@@ -116,7 +129,7 @@ export function EntryEditor({
           <span className="row-title">{account.name}</span>
           <span className="row-sub">
             {entry
-              ? `Introducido el ${dateTimeLabel(entry.createdAt)} · ${SOURCE_LABEL[entry.source]}`
+              ? `Introducido el ${dateTimeLabel(entry.source === 'migrated' ? entry.at : entry.createdAt)} · ${SOURCE_LABEL[entry.source]}`
               : 'Nuevo registro de saldo'}
           </span>
         </span>
@@ -135,11 +148,15 @@ export function EntryEditor({
           />
           <span>{currencySymbol(currency)}</span>
         </span>
-        {entry && (
-          <span className="hint" style={{ padding: 0 }}>
-            Antes: {formatMoney(entry.balance, entry.currency)}
-          </span>
-        )}
+        <span className="hint" style={{ padding: 0 }}>
+          {prev
+            ? `Registro anterior (${dayLabel(prev.at)}): ${formatMoney(prev.balance, prev.currency)}${
+                diff !== null && Math.abs(diff) >= 0.005
+                  ? ` · ${diff > 0 ? '+' : '−'}${formatMoney(Math.abs(diff), currency)}`
+                  : ' · sin cambios'
+              }`
+            : 'Es el primer registro de esta cuenta'}
+        </span>
       </label>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>

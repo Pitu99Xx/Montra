@@ -6,6 +6,7 @@ import { deleteEntries } from '../data/actions';
 import { ACCOUNT_TYPES, SOURCE_LABEL, type Account, type Entry, type EntrySource } from '../data/model';
 import { useStore } from '../data/store';
 import { formatMoney } from '../lib/currency';
+import { useBottomBand } from '../lib/viewport';
 
 const monthLabel = (d: Date) => {
   const s = d.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
@@ -95,6 +96,7 @@ export function AccountDetail({
   onAddEntry: () => void;
 }) {
   const { uid, entries, series, user, valueIn } = useStore();
+  useBottomBand('--bg');
   const [open, setOpen] = useState<string | null>(null);
   const base = user.baseCurrency;
 
