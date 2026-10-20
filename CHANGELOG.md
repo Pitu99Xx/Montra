@@ -2,6 +2,10 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.7.1 · 20 oct 2026
+
+- La barra inferior vuelve a dejar siempre el margen de la barra de inicio del iPhone, así sus botones no quedan encima de ella. La 1.6.1 lo quitaba al creer que iOS había recortado la pantalla, y esa detección fallaba.
+
 ## 1.7.0 · 20 oct 2026
 
 - Evolución: nuevo periodo **1S** (última semana), con una marca por día en el eje.

@@ -1038,28 +1038,3 @@ input.input[type='time']::-webkit-date-and-time-value {
   margin: 0;
 }
 
-/* Vista recortada por iOS: la zona de la barra de inicio no se ve, no hace falta reservarla */
-.ios-clipped .tabbar {
-  padding-bottom: 8px;
-}
-
-.ios-clipped .screen {
-  padding-bottom: 96px;
-}
-
-.ios-clipped .sheet-body,
-.ios-clipped .detail-view > .screen {
-  padding-bottom: 24px;
-}
-
-.ios-clipped .center-screen {
-  padding-bottom: 20px;
-}
-
-.ios-clipped .toast {
-  bottom: 88px;
-}
-
-.ios-clipped .update-banner {
-  bottom: 80px;
-}
