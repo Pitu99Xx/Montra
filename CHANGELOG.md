@@ -2,6 +2,10 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.3.1 · 20 oct 2026
+
+- Corregida la barra inferior elevada en el iPhone con la app instalada: la app usa ahora la altura real de la pantalla (iOS descontaba la zona de la Dynamic Island). Lo mismo para las hojas y las pantallas de acceso.
+
 ## 1.3.0 · 20 oct 2026
 
 - Transiciones suaves: al cambiar de pestaña el contenido se desliza hacia el lado al que vas; las hojas (cuenta, actualizar saldos, recordatorios, divisas) suben y bajan con animación al abrirse y cerrarse.

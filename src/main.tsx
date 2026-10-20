@@ -8,8 +8,10 @@ import '@fontsource/playfair-display/500.css';
 import '@fontsource/playfair-display/600.css';
 import './styles.css';
 import { App, applyTheme, initialTheme } from './App';
+import { syncViewportHeight } from './lib/viewport';
 
 applyTheme(initialTheme());
+syncViewportHeight();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
