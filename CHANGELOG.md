@@ -2,6 +2,18 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.5.0 · 20 oct 2026
+
+- **Historial de registros.** Cada valor que introduces queda guardado con su fecha, hora y origen (saldo inicial, actualización de saldos o editado a mano).
+- **Ficha de cuenta:** al tocar una cuenta se abre su ficha con el saldo, una mini gráfica y su historial por meses. Desliza un registro hacia la izquierda para **Editar** o **Eliminar**, o tócalo para editarlo.
+- **Editar registro:** cambia el valor, la fecha y la hora, o añade una nota. Antes de guardar se ve cómo cambiará el total de ese día en la gráfica.
+- **Apuntar saldo nuevo** desde la ficha, también con una fecha pasada.
+- **Eliminar con deshacer:** al borrar un registro o una actualización aparece «Deshacer» durante unos segundos.
+- **Evolución → Registros:** debajo de la gráfica, todas las actualizaciones agrupadas; al tocar una se despliega con el valor de cada cuenta y se marca su día en la gráfica. Filtro por cuenta.
+- **La gráfica es diaria:** un punto por día con el último valor de cada cuenta.
+- Al eliminar una cuenta, su historial anterior se conserva y deja de contar en el total desde ese día.
+- Los datos anteriores se convierten automáticamente en registros la primera vez que abres esta versión.
+
 ## 1.4.0 · 20 oct 2026
 
 - Evolución: si seleccionas solo cuentas de una misma divisa extranjera (sin el total), la gráfica, la cifra principal y el detalle al tocar se muestran en esa divisa (por ejemplo, en USD).

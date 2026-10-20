@@ -103,30 +103,57 @@ export function Sheet({
   );
 }
 
-let toastListener: ((msg: string) => void) | null = null;
-export function toast(msg: string) {
-  toastListener?.(msg);
+interface ToastAction {
+  label: string;
+  run: () => void;
+}
+interface ToastMsg {
+  text: string;
+  sub?: string;
+  action?: ToastAction;
+}
+
+let toastListener: ((msg: ToastMsg) => void) | null = null;
+/** Aviso breve; con `action` muestra un botón (por ejemplo «Deshacer»). */
+export function toast(text: string, opts?: { sub?: string; action?: ToastAction }) {
+  toastListener?.({ text, ...opts });
 }
 
 export function ToastHost() {
-  const [msg, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<ToastMsg | null>(null);
   useEffect(() => {
     let timer: number | undefined;
     toastListener = (m) => {
       setMsg(m);
       window.clearTimeout(timer);
-      timer = window.setTimeout(() => setMsg(null), 3500);
+      timer = window.setTimeout(() => setMsg(null), m.action ? 6000 : 3500);
     };
     return () => {
       toastListener = null;
       window.clearTimeout(timer);
     };
   }, []);
-  return msg ? (
-    <div className="toast" role="status">
-      {msg}
+  if (!msg) return null;
+  return (
+    <div className={`toast${msg.action ? ' with-action' : ''}`} role="status">
+      <span className="row-main">
+        <span>{msg.text}</span>
+        {msg.sub && <span style={{ fontSize: 13, fontWeight: 500, opacity: 0.75 }}>{msg.sub}</span>}
+      </span>
+      {msg.action && (
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => {
+            msg.action!.run();
+            setMsg(null);
+          }}
+        >
+          {msg.action.label}
+        </button>
+      )}
     </div>
-  ) : null;
+  );
 }
 
 export function Spinner() {

@@ -4,12 +4,14 @@ import { auth } from './firebase';
 import { ToastHost, Spinner } from './components/ui';
 import { IconChart, IconGear, IconWallet } from './components/Icons';
 import { claimOrCheckOwner, saveUser, type OwnerState } from './data/actions';
-import type { Account, Reminder, ThemePref } from './data/model';
+import type { Account, Entry, Reminder, ThemePref } from './data/model';
 import { StoreProvider, useStore } from './data/store';
 import { lockSuppressed } from './lib/lockGuard';
 import { registerServiceWorker } from './lib/push';
 import { applyUpdate, useNewVersion } from './lib/update';
+import { AccountDetail } from './screens/AccountDetail';
 import { AccountEditor } from './screens/AccountEditor';
+import { EntryEditor } from './screens/EntryEditor';
 import { AccountsScreen } from './screens/Accounts';
 import { CurrencyPicker } from './screens/CurrencyPicker';
 import { LockScreen, RESET_PIN_FLAG } from './screens/Lock';
@@ -91,6 +93,7 @@ type SheetState =
   | { kind: 'update' }
   | { kind: 'currency' }
   | { kind: 'reminder'; reminder: Reminder | null }
+  | { kind: 'entry'; entry: Entry | null; account: Account }
   | null;
 
 function wantsUpdate(url: string) {
@@ -102,7 +105,7 @@ function wantsUpdate(url: string) {
 }
 
 function Shell({ authUser }: { authUser: User }) {
-  const { uid, user, userLoaded } = useStore();
+  const { uid, user, userLoaded, accounts } = useStore();
   const [locked, setLocked] = useState(true);
   const [resetPin, setResetPin] = useState(() => {
     try {
@@ -119,6 +122,21 @@ function Shell({ authUser }: { authUser: User }) {
   const [changingPin, setChangingPin] = useState(false);
   const [pendingUpdate, setPendingUpdate] = useState(() => wantsUpdate(location.href));
   const newVersion = useNewVersion();
+  // Ficha de una cuenta abierta (entra desde la derecha)
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailClosing, setDetailClosing] = useState(false);
+  const detailAccount = detailId ? accounts.find((a) => a.id === detailId) : undefined;
+  const closeDetail = useCallback(() => {
+    setDetailClosing(true);
+    window.setTimeout(() => {
+      setDetailId(null);
+      setDetailClosing(false);
+    }, 240);
+  }, []);
+  // Si la cuenta se elimina con la ficha abierta, se cierra
+  useEffect(() => {
+    if (detailId && !detailAccount && !detailClosing) setDetailId(null);
+  }, [detailId, detailAccount, detailClosing]);
   const scrollRef = useRef<HTMLDivElement>(null);
   // Dirección del deslizamiento al cambiar de pestaña (hacia la derecha o la izquierda)
   const [tabDir, setTabDir] = useState<'from-right' | 'from-left'>('from-right');
@@ -222,13 +240,14 @@ function Shell({ authUser }: { authUser: User }) {
           {tab === 'cuentas' && (
             <AccountsScreen
               onCreate={() => setSheet({ kind: 'account', account: null })}
+              onOpen={(account) => setDetailId(account.id)}
               onEdit={(account) => setSheet({ kind: 'account', account })}
               onUpdateAll={() => setSheet({ kind: 'update' })}
             />
           )}
           {tab === 'evolucion' && (
             <Suspense fallback={<Splash />}>
-              <EvolutionScreen />
+              <EvolutionScreen onEditEntry={(entry, account) => setSheet({ kind: 'entry', entry, account })} />
             </Suspense>
           )}
           {tab === 'ajustes' && (
@@ -262,7 +281,19 @@ function Shell({ authUser }: { authUser: User }) {
         </div>
       </nav>
 
+      {detailAccount && (
+        <AccountDetail
+          account={detailAccount}
+          closing={detailClosing}
+          onBack={closeDetail}
+          onEditAccount={() => setSheet({ kind: 'account', account: detailAccount })}
+          onEditEntry={(entry) => setSheet({ kind: 'entry', entry, account: detailAccount })}
+          onAddEntry={() => setSheet({ kind: 'entry', entry: null, account: detailAccount })}
+        />
+      )}
+
       {sheet?.kind === 'account' && <AccountEditor account={sheet.account} onClose={close} />}
+      {sheet?.kind === 'entry' && <EntryEditor entry={sheet.entry} account={sheet.account} onClose={close} />}
       {sheet?.kind === 'update' && <UpdateBalances onClose={close} />}
       {sheet?.kind === 'reminder' && <ReminderEditor reminder={sheet.reminder} onClose={close} />}
       {sheet?.kind === 'currency' && (

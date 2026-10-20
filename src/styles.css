@@ -682,9 +682,11 @@ a {
 
 .toast {
   position: fixed;
-  left: 50%;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
   bottom: calc(env(safe-area-inset-bottom) + 96px);
-  transform: translateX(-50%);
   background: var(--tooltip-bg);
   color: var(--tooltip-text);
   padding: 12px 18px;
@@ -868,4 +870,136 @@ button.row:active {
     opacity: 0;
     transform: translateY(8px);
   }
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: banner-in 0.35s var(--ease-out);
+}
+
+.toast.with-action {
+  width: calc(100% - 32px);
+  max-width: 488px;
+  padding: 10px 10px 10px 16px;
+}
+
+.toast .btn {
+  height: 40px;
+  border-radius: 12px;
+  font-size: 14px;
+  padding: 0 16px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Fila deslizable del historial */
+.swipe-row {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+
+.swipe-row:last-child {
+  border-bottom: none;
+}
+
+.swipe-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+}
+
+.swipe-actions button {
+  width: 76px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.swipe-edit {
+  background: var(--border-strong);
+  color: var(--text);
+}
+
+.swipe-delete {
+  background: var(--danger);
+  color: var(--bg);
+}
+
+.swipe-front.row {
+  position: relative;
+  background: var(--surface);
+  border-bottom: none;
+  padding: 12px 16px;
+  transition: transform 0.28s var(--ease-out);
+  touch-action: pan-y;
+}
+
+.list.flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Vista de detalle (pantalla que entra desde la derecha) */
+.detail-view {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--app-h, 100dvh);
+  background: var(--bg);
+  z-index: 15;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: detail-in 0.34s var(--ease-out);
+}
+
+.detail-view.closing {
+  animation: detail-out 0.24s ease-in forwards;
+}
+
+.detail-view > .screen {
+  max-width: 520px;
+  margin: 0 auto;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 32px);
+}
+
+@keyframes detail-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes detail-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.delta-up {
+  color: var(--gold-text);
+}
+
+.delta-down {
+  color: var(--danger);
+}
+
+.delta-same {
+  color: var(--faint);
+}
+
+.month-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--faint);
+  padding: 4px 4px 0;
 }

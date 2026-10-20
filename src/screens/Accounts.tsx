@@ -16,22 +16,25 @@ function relativeDay(d: Date | undefined): string {
 }
 
 export function AccountsScreen({
+  onOpen,
   onEdit,
   onCreate,
   onUpdateAll,
 }: {
+  onOpen: (a: Account) => void;
   onEdit: (a: Account) => void;
   onCreate: () => void;
   onUpdateAll: () => void;
 }) {
-  const { uid, accounts, accountsLoaded, total, user, rates, snapshots, valueIn, missingRates } = useStore();
+  const { uid, accounts, accountsLoaded, total, user, rates, series, valueIn, missingRates } = useStore();
   const [editing, setEditing] = useState(false);
   const base = user.baseCurrency;
 
-  const last = snapshots[snapshots.length - 1];
-  const prev = snapshots[snapshots.length - 2];
-  const delta =
-    last && prev ? (last.totalEUR - prev.totalEUR) * (base === 'EUR' ? 1 : (rates?.rates[base] ?? NaN)) : null;
+  // Diferencia con el día anterior con registros
+  const last = series[series.length - 1];
+  const prev = series[series.length - 2];
+  const delta = last?.total != null && prev?.total != null ? last.total - prev.total : null;
+  const prevLabel = prev ? new Date(prev.t).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
   const lastUpdate = accounts.reduce<Date | undefined>(
     (m, a) => (a.updatedAt && (!m || a.updatedAt > m) ? a.updatedAt : m),
     undefined,
@@ -65,7 +68,7 @@ export function AccountsScreen({
         {delta !== null && Number.isFinite(delta) && Math.abs(delta) >= 0.005 && (
           <span style={{ color: 'var(--gold-text)', fontWeight: 600, fontSize: 14 }}>
             {delta > 0 ? '+' : ''}
-            {formatMoney(delta, base)} desde la última actualización
+            {formatMoney(delta, base)} desde el {prevLabel}
           </span>
         )}
         <span className="row-sub">
@@ -112,7 +115,7 @@ export function AccountsScreen({
                     type="button"
                     className="row"
                     style={{ border: 'none', flex: 1, opacity: a.includeInTotal ? 1 : 0.6 }}
-                    onClick={() => onEdit(a)}
+                    onClick={() => (editing ? onEdit(a) : onOpen(a))}
                   >
                     <AccountIcon currency={a.currency} color={a.color} />
                     <span className="row-main">

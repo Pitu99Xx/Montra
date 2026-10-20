@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useStore } from '../data/store';
 import { formatMoney } from '../lib/currency';
-import type { Snapshot } from '../data/model';
+import type { Account, Entry } from '../data/model';
+import { RecordsList } from './RecordsList';
 
 const RANGES = [
   { id: '1M', days: 31 },
@@ -80,20 +81,6 @@ const compact = (v: number) => {
   return v.toLocaleString('es-ES', { maximumFractionDigits: 0 });
 };
 
-function rateFor(s: Snapshot, code: string, fallback: Record<string, number> | undefined): number | null {
-  if (code === 'EUR') return 1;
-  return s.rates?.[code] ?? fallback?.[code] ?? null;
-}
-
-/** Valor en EUR de una cuenta en un punto; si no se guardó, se calcula con los tipos de ese momento. */
-function accountEUR(s: Snapshot, id: string, fallback: Record<string, number> | undefined): number | null {
-  const acc = s.accounts?.[id];
-  if (!acc) return null;
-  if (acc.valueEUR !== null && acc.valueEUR !== undefined) return acc.valueEUR;
-  const r = rateFor(s, acc.currency, fallback);
-  return r ? acc.balance / r : null;
-}
-
 interface TipProps {
   active?: boolean;
   payload?: { dataKey: string; value: number; color: string; name: string }[];
@@ -121,8 +108,9 @@ function ChartTooltip({ active, payload, label, base }: TipProps) {
   );
 }
 
-export function EvolutionScreen() {
-  const { snapshots, accounts, user, rates } = useStore();
+export function EvolutionScreen({ onEditEntry }: { onEditEntry: (entry: Entry, account: Account) => void }) {
+  const { series, accounts, user } = useStore();
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const base = user.baseCurrency;
   const [range, setRange] = useState<RangeId>('6M');
   const [sel, setSel] = useState<string[]>(loadSel);
@@ -150,39 +138,35 @@ export function EvolutionScreen() {
     const now = Date.now();
     const days = RANGES.find((r) => r.id === range)!.days;
     if (days !== Infinity) return [now - days * DAY, now];
-    const firstAt = snapshots[0]?.at.getTime() ?? now;
+    const firstAt = series[0]?.t ?? now;
     return [Math.min(firstAt, now - 30 * DAY), now];
-  }, [range, snapshots]);
+  }, [range, series]);
   const axis = useMemo(() => axisFor(start, end), [start, end]);
 
+  // Un punto por día (el último valor de cada cuenta ese día)
   const data = useMemo(() => {
-    const from = start;
-    return snapshots
-      .filter((s) => s.at.getTime() >= from)
-      .map((s) => {
-        const r = rateFor(s, base, rates?.rates);
-        const row: Record<string, number | null> = { t: s.at.getTime(), total: r === null ? null : s.totalEUR * r };
+    return series
+      .filter((p) => p.t >= start)
+      .map((p) => {
+        const row: Record<string, number | null | string> = { t: p.t, day: p.day, total: p.total };
         let sum: number | null = null;
         for (const a of selectedAccounts) {
-          let v: number | null;
-          if (native) v = s.accounts?.[a.id]?.balance ?? null;
-          else {
-            const eur = accountEUR(s, a.id, rates?.rates);
-            v = eur === null || r === null ? null : eur * r;
-          }
-          row[`a_${a.id}`] = v;
-          if (v !== null) sum = (sum ?? 0) + v;
+          const v = p.accounts[a.id];
+          const value = v ? (native ? v.native : v.base) : null;
+          row[`a_${a.id}`] = value;
+          if (value !== null) sum = (sum ?? 0) + value;
         }
         // Lo que muestra la cifra grande: el total o, sin él, la suma de las cuentas elegidas
-        row.headline = showTotal || selectedAccounts.length === 0 ? row.total : sum;
+        row.headline = showTotal || selectedAccounts.length === 0 ? p.total : sum;
         return row;
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [snapshots, sel.join(), accounts, start, base, rates, native]);
+  }, [series, sel.join(), accounts, start, native]);
+  const selectedPoint = selectedDay ? data.find((d) => d.day === selectedDay) : undefined;
 
   const withValue = data.filter((d) => d.headline !== null && d.headline !== undefined);
-  const first = withValue[0]?.headline ?? null;
-  const last = withValue[withValue.length - 1]?.headline ?? null;
+  const first = (withValue[0]?.headline as number | undefined) ?? null;
+  const last = (withValue[withValue.length - 1]?.headline as number | undefined) ?? null;
   const change = first !== null && last !== null ? last - first : null;
   const pct = change !== null && first ? (change / Math.abs(first)) * 100 : null;
 
@@ -200,7 +184,7 @@ export function EvolutionScreen() {
         ))}
       </div>
 
-      {snapshots.length === 0 ? (
+      {series.length === 0 ? (
         <section className="card empty">
           <span className="serif" style={{ fontSize: 22 }}>
             Aún no hay historial
@@ -262,6 +246,14 @@ export function EvolutionScreen() {
                   tickLine={false}
                   domain={['auto', 'auto']}
                 />
+                {selectedPoint && (
+                  <ReferenceLine
+                    x={selectedPoint.t as number}
+                    stroke="var(--gold)"
+                    strokeDasharray="4 3"
+                    strokeWidth={1.5}
+                  />
+                )}
                 <Tooltip
                   content={(props) => <ChartTooltip {...(props as unknown as TipProps)} base={unit} />}
                   cursor={{ stroke: 'var(--faint)', strokeDasharray: '3 3' }}
@@ -327,6 +319,8 @@ export function EvolutionScreen() {
               </button>
             ))}
           </div>
+
+          <RecordsList onSelectDay={setSelectedDay} onEditEntry={onEditEntry} />
         </>
       )}
     </main>

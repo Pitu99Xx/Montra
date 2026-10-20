@@ -3,17 +3,24 @@ import { collection, doc, onSnapshot, orderBy, query, type Timestamp } from 'fir
 import { db } from '../firebase';
 import { convert } from '../lib/currency';
 import { computeTotalEUR } from './totals';
-import { isSnapshotPending, recordSnapshot, requestRatesRefresh } from './actions';
+import { migrateSnapshots, requestRatesRefresh } from './actions';
+import { buildSeries, type DayPoint } from './series';
 export { computeTotalEUR } from './totals';
-import { DEFAULT_USER, type Account, type Rates, type Snapshot, type UserDoc } from './model';
+import { DEFAULT_USER, type Account, type Entry, type Rates, type UserDoc } from './model';
 
 interface Store {
   uid: string;
   user: UserDoc;
   userLoaded: boolean;
+  /** Cuentas activas (sin las archivadas) */
   accounts: Account[];
+  /** Todas, incluidas las archivadas (para nombres y colores del historial) */
+  allAccounts: Account[];
   accountsLoaded: boolean;
-  snapshots: Snapshot[];
+  entries: Entry[];
+  entriesLoaded: boolean;
+  /** Evolución diaria: un punto por día con el último valor de cada cuenta */
+  series: DayPoint[];
   rates: Rates | null;
   /** Total actual en la divisa base (null si falta algún tipo de cambio) */
   total: number | null;
@@ -38,10 +45,10 @@ function daysOld(date: string): number {
 export function StoreProvider({ uid, children }: { uid: string; children: ReactNode }) {
   const [user, setUser] = useState<UserDoc>(DEFAULT_USER);
   const [userLoaded, setUserLoaded] = useState(false);
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [allAccounts, setAllAccounts] = useState<Account[]>([]);
   const [accountsLoaded, setAccountsLoaded] = useState(false);
-  const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
-  const [snapshotsLoaded, setSnapshotsLoaded] = useState(false);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [entriesLoaded, setEntriesLoaded] = useState(false);
   const [serverRates, setServerRates] = useState<Rates | null>(null);
   const [liveRates, setLiveRates] = useState<Rates | null>(null);
 
@@ -52,7 +59,7 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
         setUserLoaded(true);
       }),
       onSnapshot(query(collection(db, 'users', uid, 'accounts'), orderBy('order')), (s) => {
-        setAccounts(
+        setAllAccounts(
           s.docs.map((d) => {
             const data = d.data();
             return {
@@ -67,14 +74,19 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
         );
         setAccountsLoaded(true);
       }),
-      onSnapshot(query(collection(db, 'users', uid, 'snapshots'), orderBy('at')), (s) => {
-        setSnapshots(
+      onSnapshot(query(collection(db, 'users', uid, 'entries'), orderBy('at')), (s) => {
+        setEntries(
           s.docs.map((d) => {
-            const data = d.data();
-            return { ...data, id: d.id, at: tsToDate(data.at) ?? new Date() } as Snapshot;
+            const data = d.data({ serverTimestamps: 'estimate' });
+            return {
+              ...data,
+              id: d.id,
+              at: tsToDate(data.at) ?? new Date(),
+              createdAt: tsToDate(data.createdAt) ?? new Date(),
+            } as Entry;
           }),
         );
-        setSnapshotsLoaded(true);
+        setEntriesLoaded(true);
       }),
       onSnapshot(
         doc(db, 'rates', 'latest'),
@@ -122,17 +134,23 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
     return serverRates ?? liveRates;
   }, [serverRates, liveRates]);
 
-  // Guardar el punto de la evolución que quedó pendiente por falta de tipo de cambio
-  const recording = useRef(false);
+  const accounts = useMemo(() => allAccounts.filter((a) => !a.archived), [allAccounts]);
+
+  // Una sola vez: convertir los puntos antiguos (snapshots) en registros individuales
+  const migrating = useRef(false);
   useEffect(() => {
-    if (!rates || !accountsLoaded || !snapshotsLoaded || !accounts.length || recording.current) return;
-    if (!isSnapshotPending() && snapshots.length > 0) return;
-    if (computeTotalEUR(accounts, rates) === null) return;
-    recording.current = true;
-    recordSnapshot(uid, accounts, rates).finally(() => {
-      recording.current = false;
+    if (!userLoaded || !accountsLoaded || !entriesLoaded || user.entriesMigrated || migrating.current) return;
+    migrating.current = true;
+    migrateSnapshots(uid, allAccounts, rates).catch((e) => {
+      console.error('Migración de registros', e);
+      migrating.current = false;
     });
-  }, [rates, accounts, accountsLoaded, snapshots.length, snapshotsLoaded, uid]);
+  }, [userLoaded, accountsLoaded, entriesLoaded, user.entriesMigrated, uid, allAccounts, rates]);
+
+  const series = useMemo(
+    () => buildSeries(entries, allAccounts, user.baseCurrency, rates?.rates),
+    [entries, allAccounts, user.baseCurrency, rates],
+  );
 
   const value = useMemo<Store>(() => {
     const totalEUR = computeTotalEUR(accounts, rates);
@@ -142,8 +160,11 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
       user,
       userLoaded,
       accounts,
+      allAccounts,
       accountsLoaded,
-      snapshots,
+      entries,
+      entriesLoaded,
+      series,
       rates,
       totalEUR,
       missingRates: [
@@ -152,7 +173,7 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
       total: totalEUR === null ? null : convert(totalEUR, 'EUR', base, rates),
       valueIn: (amount, from) => convert(amount, from, base, rates),
     };
-  }, [uid, user, userLoaded, accounts, accountsLoaded, snapshots, rates]);
+  }, [uid, user, userLoaded, accounts, allAccounts, accountsLoaded, entries, entriesLoaded, series, rates]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -15,7 +15,38 @@ export interface Account {
   includeInTotal: boolean;
   order: number;
   updatedAt?: Date;
+  /** Cuenta eliminada: no se muestra, pero su historial se conserva en la evolución */
+  archived?: boolean;
 }
+
+/** Cómo se introdujo un registro */
+export type EntrySource = 'initial' | 'update' | 'edit' | 'closed' | 'migrated';
+
+/** Un valor introducido: el saldo de una cuenta en un momento dado. */
+export interface Entry {
+  id: string;
+  accountId: string;
+  balance: number;
+  currency: string;
+  /** Momento al que corresponde el saldo (editable) */
+  at: Date;
+  /** Cuándo se introdujo */
+  createdAt: Date;
+  source: EntrySource;
+  /** Agrupa los registros de una misma «Actualización de saldos» */
+  batchId?: string;
+  note?: string;
+  /** Tipos del BCE (unidades por 1 EUR) en el momento de introducirlo */
+  rates?: Record<string, number> | null;
+}
+
+export const SOURCE_LABEL: Record<EntrySource, string> = {
+  initial: 'Saldo inicial · cuenta creada',
+  update: 'Actualización de saldos',
+  edit: 'Editado a mano',
+  closed: 'Cuenta eliminada',
+  migrated: 'Actualización de saldos',
+};
 
 export interface Reminder {
   id: string;
@@ -36,6 +67,8 @@ export interface UserDoc {
   reminders: Reminder[];
   pin?: PinRecord;
   reminderState?: Record<string, string>;
+  /** Los puntos antiguos (snapshots) ya se convirtieron en registros */
+  entriesMigrated?: boolean;
 }
 
 export interface SnapshotAccount {

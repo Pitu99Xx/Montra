@@ -53,9 +53,15 @@ export function AccountEditor({ account, onClose }: { account: Account | null; o
   };
 
   const remove = async () => {
-    if (!account || !confirm(`¿Eliminar «${account.name}»? Su historial dejará de verse en la evolución.`)) return;
+    if (
+      !account ||
+      !confirm(
+        `¿Eliminar «${account.name}»? Dejará de contar en el total desde hoy; su historial anterior se conserva en la evolución.`,
+      )
+    )
+      return;
     setBusy(true);
-    await deleteAccount(uid, account.id, accounts, rates);
+    await deleteAccount(uid, account, rates);
     close();
   };
 

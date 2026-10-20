@@ -16,7 +16,8 @@ Cloud Messaging y Hosting.
 - **Cuentas:** alta, edición (nombre, color, divisa, tipo), reordenación y borrado. El total se calcula en la
   divisa elegida en Ajustes con los tipos del BCE del día.
 - **Actualizar saldos:** todas las cuentas en una pantalla; cada guardado añade un punto a la evolución.
-- **Evolución:** gráfica del total y de las cuentas que elijas; al tocar un punto se ven fecha y saldo.
+- **Evolución:** gráfica diaria del total y de las cuentas que elijas; al tocar un punto se ven fecha y saldo.
+- **Historial:** cada valor introducido queda registrado; se puede editar (valor, fecha, nota) o borrar con opción de deshacer, desde la ficha de cada cuenta o desde «Registros» en Evolución.
 - **Ajustes:** cambiar PIN, Face ID, divisa del total, tema (oscuro / claro / sistema), notificaciones y
   recordatorios semanales con los días y la hora que quieras.
 
@@ -38,11 +39,19 @@ Cloud Messaging y Hosting.
 ```
 meta/owner                       { uid }                      propietaria única
 users/{uid}                      ajustes, PIN (hash PBKDF2), recordatorios
-users/{uid}/accounts/{id}        cuenta y saldo actual
-users/{uid}/snapshots/{id}       punto de la evolución (valores en EUR + tipos de ese momento)
+users/{uid}/accounts/{id}        cuenta y saldo actual (archived: cuenta eliminada)
+users/{uid}/entries/{id}         registro: saldo de una cuenta en un momento, con su origen,
+                                 nota, tipos de cambio de ese momento y batchId si viene de
+                                 «Actualizar saldos»
 users/{uid}/devices/{id}         tokens de notificaciones
 rates/latest                     tipos de cambio del BCE (los escribe la función)
 ```
+
+La evolución se calcula a partir de los registros: un punto por día con el último saldo de cada
+cuenta ese día, convertido con los tipos guardados en su registro. Editar o borrar un registro
+recalcula la gráfica. Al eliminar una cuenta se archiva con un registro final a 0, así el pasado no
+cambia. Los puntos de versiones anteriores (`snapshots`) se convierten en registros la primera vez
+que se abre la 1.5.0.
 
 Las cuentas tienen un campo `kind` (`asset` / `liability`) preparado para tarjetas o préstamos que resten
 del total en el futuro.
