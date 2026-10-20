@@ -13,6 +13,7 @@ import {
   type WriteBatch,
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { fractionDigits } from '../lib/currency';
 import type { Account, Entry, EntrySource, Rates, Snapshot, UserDoc } from './model';
 
 export type OwnerState = 'owner' | 'other';
@@ -362,4 +363,36 @@ export function requestTestPush(uid: string) {
 
 export function requestRatesRefresh(uid: string) {
   return addDoc(collection(db, 'users', uid, 'requests'), { type: 'refreshRates', createdAt: serverTimestamp() });
+}
+
+/**
+ * Una sola vez (1.10.4): en divisas sin decimales (como el yen), «176.967» se llegó a guardar como
+ * 176,967 al leer el punto de los miles como decimal. Un saldo así no puede tener decimales, así
+ * que se recupera multiplicando por 1000. Afecta a registros y al saldo actual de las cuentas.
+ */
+export async function repairZeroDecimalAmounts(uid: string, entries: Entry[], accounts: Account[]) {
+  const broken = (balance: number, currency: string) => {
+    if (fractionDigits(currency) !== 0 || Number.isInteger(balance)) return null;
+    const fixed = Math.round(balance * 1000);
+    return Math.abs(balance * 1000 - fixed) < 1e-6 ? fixed : null;
+  };
+  const batch = writeBatch(db);
+  let changes = 0;
+  for (const e of entries) {
+    const fixed = broken(e.balance, e.currency);
+    if (fixed !== null) {
+      batch.update(doc(db, 'users', uid, 'entries', e.id), { balance: fixed });
+      changes++;
+    }
+  }
+  for (const a of accounts) {
+    const fixed = broken(a.balance, a.currency);
+    if (fixed !== null) {
+      batch.update(doc(db, 'users', uid, 'accounts', a.id), { balance: fixed });
+      changes++;
+    }
+  }
+  if (changes) await batch.commit();
+  await saveUser(uid, { zeroDecimalFixed: true });
+  return changes;
 }

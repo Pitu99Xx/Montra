@@ -2,6 +2,11 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.10.4 · 20 oct 2026
+
+- Corregido: en divisas sin decimales (como el yen), al guardar un saldo como «176.967» el punto de los miles se leía como decimal y quedaba en 177 ¥. Ahora un punto seguido de grupos de tres cifras se lee como separador de miles.
+- Los registros y saldos que se guardaron mal por este fallo se reparan automáticamente al abrir esta versión (176,967 ¥ vuelve a ser 176.967 ¥).
+
 ## 1.10.3 · 20 oct 2026
 
 - «Enviar notificación de prueba» ahora dice qué ha pasado: a cuántos dispositivos se ha enviado, si no hay ninguno registrado o qué error ha devuelto Firebase.

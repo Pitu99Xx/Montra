@@ -3,7 +3,7 @@ import { collection, doc, onSnapshot, orderBy, query, type Timestamp } from 'fir
 import { db } from '../firebase';
 import { convert } from '../lib/currency';
 import { computeTotalEUR } from './totals';
-import { autoGroupRevolut, migrateSnapshots, requestRatesRefresh } from './actions';
+import { autoGroupRevolut, migrateSnapshots, repairZeroDecimalAmounts, requestRatesRefresh } from './actions';
 import { buildSeries, type DayPoint } from './series';
 export { computeTotalEUR } from './totals';
 import { DEFAULT_USER, type Account, type Entry, type Rates, type UserDoc } from './model';
@@ -159,6 +159,18 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
       grouping.current = false;
     });
   }, [userLoaded, accountsLoaded, user.entriesMigrated, user.autoGroupDone, uid, accounts]);
+
+  // Una sola vez (1.10.4): recuperar los yenes (y otras divisas sin decimales) mal leídos
+  const repairing = useRef(false);
+  useEffect(() => {
+    if (!userLoaded || !accountsLoaded || !entriesLoaded || !user.entriesMigrated || user.zeroDecimalFixed) return;
+    if (repairing.current) return;
+    repairing.current = true;
+    repairZeroDecimalAmounts(uid, entries, allAccounts).catch((e) => {
+      console.error('Reparación de importes', e);
+      repairing.current = false;
+    });
+  }, [userLoaded, accountsLoaded, entriesLoaded, user.entriesMigrated, user.zeroDecimalFixed, uid, entries, allAccounts]);
 
   const series = useMemo(
     () => buildSeries(entries, allAccounts, user.baseCurrency, rates?.rates),

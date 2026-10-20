@@ -77,6 +77,8 @@ export interface UserDoc {
   lockAfter?: number;
   /** Ya se agruparon automáticamente las cuentas de Revolut como subcuentas (1.9.0) */
   autoGroupDone?: boolean;
+  /** Ya se repararon los importes sin decimales mal leídos (1.10.4) */
+  zeroDecimalFixed?: boolean;
 }
 
 export interface SnapshotAccount {

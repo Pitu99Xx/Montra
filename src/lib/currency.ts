@@ -55,14 +55,24 @@ export function formatAmount(amount: number, code: string): string {
   } as Intl.NumberFormatOptions).format(amount);
 }
 
-/** Interpreta «1.234,56», «1234,56» o «1234.56». */
+/**
+ * Interpreta importes escritos a la española: «1.234,56», «1234,56», «176.967» (miles) o «1234.56».
+ * Un punto seguido de grupos de 3 cifras es separador de miles (así escribe la app los saldos
+ * sin decimales, como los yenes); en otro caso, un único punto es el decimal.
+ */
 export function parseAmount(text: string): number | null {
   let t = text.replace(/[\s€$£¥]/g, '');
   if (!t) return null;
   if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
+  else if (/^-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
   else if ((t.match(/\./g) ?? []).length > 1) t = t.replace(/\./g, '');
   const n = Number(t);
   return Number.isFinite(n) ? n : null;
+}
+
+/** Decimales que usa una divisa (0 para el yen). */
+export function fractionDigits(code: string): number {
+  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: code }).resolvedOptions().maximumFractionDigits ?? 2;
 }
 
 /** Tipos expresados como unidades de cada divisa por 1 EUR. */
