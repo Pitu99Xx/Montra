@@ -24,7 +24,7 @@ export function AccountsScreen({
   onCreate: () => void;
   onUpdateAll: () => void;
 }) {
-  const { uid, accounts, accountsLoaded, total, user, rates, snapshots, valueIn } = useStore();
+  const { uid, accounts, accountsLoaded, total, user, rates, snapshots, valueIn, missingRates } = useStore();
   const [editing, setEditing] = useState(false);
   const base = user.baseCurrency;
 
@@ -57,6 +57,11 @@ export function AccountsScreen({
       <section className="card total-card" aria-label="Total">
         <span className="eyebrow">Total · {base}</span>
         <span className="num total-value">{total !== null ? formatMoney(total, base) : '—'}</span>
+        {total === null && missingRates.length > 0 && (
+          <span className="notice">
+            Obteniendo el tipo de cambio de {missingRates.join(', ')}… El total aparecerá en unos segundos.
+          </span>
+        )}
         {delta !== null && Number.isFinite(delta) && Math.abs(delta) >= 0.005 && (
           <span style={{ color: 'var(--gold-text)', fontWeight: 600, fontSize: 14 }}>
             {delta > 0 ? '+' : ''}

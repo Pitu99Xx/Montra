@@ -21,21 +21,52 @@ interface Reminder {
 
 const DEFAULT_BODY = 'Es momento de actualizar el estado de tus cuentas';
 
-/** Tipos de cambio del BCE (vía Frankfurter), una vez al día tras su publicación. */
+const ECB_DAILY = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml';
+const FRANKFURTER = ['https://api.frankfurter.dev/v1/latest', 'https://api.frankfurter.app/latest'];
+
+/** Tipos del día publicados por el BCE (unidades de cada divisa por 1 EUR). */
+async function fetchRates(): Promise<{ date: string; rates: Record<string, number>; source: string }> {
+  try {
+    const res = await fetch(ECB_DAILY);
+    if (!res.ok) throw new Error(`BCE respondió ${res.status}`);
+    const xml = await res.text();
+    const date = /time=['"](\d{4}-\d{2}-\d{2})['"]/.exec(xml)?.[1];
+    const rates: Record<string, number> = {};
+    for (const m of xml.matchAll(/currency=['"]([A-Z]{3})['"]\s+rate=['"]([\d.]+)['"]/g)) rates[m[1]] = Number(m[2]);
+    if (!date || Object.keys(rates).length < 10) throw new Error('Respuesta del BCE incompleta');
+    return { date, rates, source: 'ecb' };
+  } catch (err) {
+    logger.warn('BCE no disponible, se usa Frankfurter', { err: String(err) });
+  }
+  for (const url of FRANKFURTER) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const json = (await res.json()) as { date: string; rates: Record<string, number> };
+      return { date: json.date, rates: json.rates, source: 'frankfurter' };
+    } catch {
+      /* siguiente */
+    }
+  }
+  throw new Error('No se pudieron obtener los tipos de cambio');
+}
+
+async function refreshRates(): Promise<void> {
+  const { date, rates, source } = await fetchRates();
+  await db.doc('rates/latest').set({
+    base: 'EUR',
+    date,
+    rates: { ...rates, EUR: 1 },
+    source,
+    fetchedAt: FieldValue.serverTimestamp(),
+  });
+  logger.info('Tipos actualizados', { date, source, count: Object.keys(rates).length });
+}
+
+/** Una vez al día, después de que el BCE publique (hacia las 16:00 CET). */
 export const updateRates = onSchedule(
   { schedule: 'every day 16:45', timeZone: 'Europe/Madrid', retryCount: 3 },
-  async () => {
-    const res = await fetch('https://api.frankfurter.app/latest?from=EUR');
-    if (!res.ok) throw new Error(`Frankfurter respondió ${res.status}`);
-    const json = (await res.json()) as { date: string; rates: Record<string, number> };
-    await db.doc('rates/latest').set({
-      base: 'EUR',
-      date: json.date,
-      rates: { ...json.rates, EUR: 1 },
-      fetchedAt: FieldValue.serverTimestamp(),
-    });
-    logger.info('Tipos actualizados', { date: json.date, count: Object.keys(json.rates).length });
-  }
+  refreshRates
 );
 
 function nowIn(tz: string): { date: string; weekday: number; minutes: number } {
@@ -109,10 +140,16 @@ export const sendReminders = onSchedule({ schedule: 'every 5 minutes', timeZone:
   }
 });
 
-/** Notificación de prueba pedida desde Ajustes. */
+/** Peticiones de la app: notificación de prueba y descarga inmediata de tipos de cambio. */
 export const onUserRequest = onDocumentCreated('users/{uid}/requests/{reqId}', async (event) => {
   const snap = event.data;
   if (!snap) return;
+  if (snap.get('type') === 'refreshRates') {
+    // La app lo pide si aún no hay tipos guardados o están viejos; como mucho una descarga cada hora
+    const current = await db.doc('rates/latest').get();
+    const fetchedAt = current.get('fetchedAt')?.toMillis?.() ?? 0;
+    if (Date.now() - fetchedAt > 60 * 60 * 1000) await refreshRates();
+  }
   if (snap.get('type') === 'testPush') {
     const sent = await sendToUser(event.params.uid, {
       title: 'Montra',

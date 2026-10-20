@@ -1,17 +1,8 @@
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  serverTimestamp,
-  setDoc,
-  writeBatch,
-} from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDoc, serverTimestamp, setDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase';
 import { toEUR } from '../lib/currency';
 import type { Account, Rates, SnapshotAccount, UserDoc } from './model';
-import { computeTotalEUR } from './store';
+import { computeTotalEUR } from './totals';
 
 export type OwnerState = 'owner' | 'other';
 
@@ -33,6 +24,11 @@ export function saveUser(uid: string, patch: Partial<UserDoc>): Promise<void> {
   return setDoc(doc(db, 'users', uid), patch, { merge: true });
 }
 
+// Si se guarda una cuenta antes de tener el tipo de cambio de su divisa, el punto de la evolución
+// queda pendiente y lo guarda el store en cuanto llegan los tipos.
+let snapshotPending = false;
+export const isSnapshotPending = () => snapshotPending;
+
 /** Guarda un punto de la evolución con el estado de todas las cuentas. */
 export async function recordSnapshot(uid: string, accounts: Account[], rates: Rates | null): Promise<void> {
   const map: Record<string, SnapshotAccount> = {};
@@ -48,7 +44,11 @@ export async function recordSnapshot(uid: string, accounts: Account[], rates: Ra
     };
   }
   const totalEUR = computeTotalEUR(accounts, rates);
-  if (totalEUR === null) return; // sin tipo de cambio no se puede calcular el total
+  if (totalEUR === null) {
+    snapshotPending = true;
+    return;
+  }
+  snapshotPending = false;
   await addDoc(collection(db, 'users', uid, 'snapshots'), {
     at: serverTimestamp(),
     totalEUR,
@@ -62,12 +62,7 @@ function accountData(a: Account) {
   return { ...rest, updatedAt: serverTimestamp() };
 }
 
-export async function saveAccount(
-  uid: string,
-  account: Account,
-  all: Account[],
-  rates: Rates | null
-): Promise<void> {
+export async function saveAccount(uid: string, account: Account, all: Account[], rates: Rates | null): Promise<void> {
   const isNew = !account.id;
   const ref = isNew ? doc(collection(db, 'users', uid, 'accounts')) : doc(db, 'users', uid, 'accounts', account.id);
   const saved = { ...account, id: ref.id };
@@ -90,7 +85,7 @@ export async function deleteAccount(uid: string, id: string, all: Account[], rat
   await recordSnapshot(
     uid,
     all.filter((a) => a.id !== id),
-    rates
+    rates,
   );
 }
 
@@ -104,7 +99,7 @@ export async function updateBalances(
   uid: string,
   balances: Record<string, number>,
   all: Account[],
-  rates: Rates | null
+  rates: Rates | null,
 ) {
   const batch = writeBatch(db);
   for (const [id, balance] of Object.entries(balances)) {
@@ -114,7 +109,7 @@ export async function updateBalances(
   await recordSnapshot(
     uid,
     all.map((a) => (hasKey(balances, a.id) ? { ...a, balance: balances[a.id] } : a)),
-    rates
+    rates,
   );
 }
 
@@ -122,4 +117,8 @@ const hasKey = (o: Record<string, number>, id: string) => Object.prototype.hasOw
 
 export function requestTestPush(uid: string) {
   return addDoc(collection(db, 'users', uid, 'requests'), { type: 'testPush', createdAt: serverTimestamp() });
+}
+
+export function requestRatesRefresh(uid: string) {
+  return addDoc(collection(db, 'users', uid, 'requests'), { type: 'refreshRates', createdAt: serverTimestamp() });
 }

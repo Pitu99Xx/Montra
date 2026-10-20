@@ -13,12 +13,28 @@ const commit = (() => {
   }
 })();
 
+const builtAt = new Date().toISOString();
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      // /version.json: la app lo consulta para avisar cuando hay una versión nueva
+      name: 'montra-version',
+      apply: 'build',
+      generateBundle() {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'version.json',
+          source: JSON.stringify({ version, commit, builtAt }),
+        });
+      },
+    },
+  ],
   define: {
     __APP_VERSION__: JSON.stringify(version),
     __APP_COMMIT__: JSON.stringify(commit),
-    __APP_BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+    __APP_BUILD_DATE__: JSON.stringify(builtAt),
   },
   build: { chunkSizeWarningLimit: 1200 },
 });

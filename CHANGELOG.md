@@ -2,6 +2,13 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.1.0 · 20 oct 2026
+
+- Aviso «Nueva versión» con botón **Actualizar** cuando se publica una versión nueva.
+- La barra inferior queda fija abajo; solo se desplaza el contenido de cada pestaña.
+- Tipos de cambio: si faltan, el servidor los descarga del BCE en el momento (antes había que esperar a las 16:45). Mientras llegan, la app avisa de qué divisas faltan.
+- El punto de la evolución que no se pudo guardar por falta de tipo de cambio se guarda en cuanto llegan los tipos.
+
 ## 1.0.1 · 20 oct 2026
 
 - Face ID se lanza solo al volver a la app y ya no muestra «no disponible» cuando iOS rechaza el intento automático; el botón de Face ID sigue funcionando siempre.

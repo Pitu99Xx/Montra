@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { getRedirectResult, onAuthStateChanged, signOut, type User } from 'firebase/auth';
 import { auth } from './firebase';
 import { ToastHost, Spinner } from './components/ui';
@@ -8,6 +8,7 @@ import type { Account, Reminder, ThemePref } from './data/model';
 import { StoreProvider, useStore } from './data/store';
 import { lockSuppressed } from './lib/lockGuard';
 import { registerServiceWorker } from './lib/push';
+import { applyUpdate, useNewVersion } from './lib/update';
 import { AccountEditor } from './screens/AccountEditor';
 import { AccountsScreen } from './screens/Accounts';
 import { CurrencyPicker } from './screens/CurrencyPicker';
@@ -116,6 +117,12 @@ function Shell({ authUser }: { authUser: User }) {
   const [sheet, setSheet] = useState<SheetState>(null);
   const [changingPin, setChangingPin] = useState(false);
   const [pendingUpdate, setPendingUpdate] = useState(() => wantsUpdate(location.href));
+  const newVersion = useNewVersion();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo(0, 0);
+  }, [tab]);
 
   useEffect(() => {
     if (userLoaded) applyTheme(user.theme);
@@ -156,7 +163,9 @@ function Shell({ authUser }: { authUser: User }) {
   // Primera vez: guardar la zona horaria para los recordatorios
   useEffect(() => {
     if (userLoaded && !user.pin) {
-      saveUser(uid, { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Madrid' });
+      saveUser(uid, {
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Madrid',
+      });
     }
   }, [userLoaded, user.pin, uid]);
 
@@ -194,25 +203,39 @@ function Shell({ authUser }: { authUser: User }) {
 
   return (
     <div className="app">
-      {tab === 'cuentas' && (
-        <AccountsScreen
-          onCreate={() => setSheet({ kind: 'account', account: null })}
-          onEdit={(account) => setSheet({ kind: 'account', account })}
-          onUpdateAll={() => setSheet({ kind: 'update' })}
-        />
-      )}
-      {tab === 'evolucion' && (
-        <Suspense fallback={<Splash />}>
-          <EvolutionScreen />
-        </Suspense>
-      )}
-      {tab === 'ajustes' && (
-        <SettingsScreen
-          authUser={authUser}
-          onChangePin={() => setChangingPin(true)}
-          onPickCurrency={() => setSheet({ kind: 'currency' })}
-          onEditReminder={(reminder) => setSheet({ kind: 'reminder', reminder })}
-        />
+      <div className="app-scroll" ref={scrollRef}>
+        {tab === 'cuentas' && (
+          <AccountsScreen
+            onCreate={() => setSheet({ kind: 'account', account: null })}
+            onEdit={(account) => setSheet({ kind: 'account', account })}
+            onUpdateAll={() => setSheet({ kind: 'update' })}
+          />
+        )}
+        {tab === 'evolucion' && (
+          <Suspense fallback={<Splash />}>
+            <EvolutionScreen />
+          </Suspense>
+        )}
+        {tab === 'ajustes' && (
+          <SettingsScreen
+            authUser={authUser}
+            onChangePin={() => setChangingPin(true)}
+            onPickCurrency={() => setSheet({ kind: 'currency' })}
+            onEditReminder={(reminder) => setSheet({ kind: 'reminder', reminder })}
+          />
+        )}
+      </div>
+
+      {newVersion && (
+        <div className="update-banner" role="status">
+          <span className="row-main">
+            <span style={{ fontWeight: 600, fontSize: 15 }}>Nueva versión {newVersion.version}</span>
+            <span className="row-sub">Toca «Actualizar» para usarla ya</span>
+          </span>
+          <button type="button" className="btn btn-primary" onClick={applyUpdate}>
+            Actualizar
+          </button>
+        </div>
       )}
 
       <nav className="tabbar" aria-label="Secciones">
@@ -252,15 +275,7 @@ function TabButton({
   icon: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      className="tab"
-      aria-current={tab === id ? 'page' : undefined}
-      onClick={() => {
-        setTab(id);
-        window.scrollTo(0, 0);
-      }}
-    >
+    <button type="button" className="tab" aria-current={tab === id ? 'page' : undefined} onClick={() => setTab(id)}>
       {icon}
       {label}
     </button>

@@ -53,7 +53,8 @@ html,
 body,
 #root {
   margin: 0;
-  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
   background: var(--bg);
 }
 
@@ -99,16 +100,31 @@ a {
 }
 
 .app {
-  max-width: 520px;
-  margin: 0 auto;
-  min-height: 100dvh;
+  /* Pantalla completa fija: solo se desplaza el contenido, nunca la página.
+     Así la barra inferior no se mueve al volver a la app en el iPhone. */
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.app-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-scroll > * {
+  max-width: 520px;
+  margin: 0 auto;
 }
 
 .screen {
   flex: 1;
-  padding: calc(env(safe-area-inset-top) + 24px) 20px 120px;
+  padding: calc(env(safe-area-inset-top) + 24px) 20px 32px;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -441,10 +457,7 @@ a {
 
 /* Barra de pestañas */
 .tabbar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  flex-shrink: 0;
   background: var(--nav);
   border-top: 1px solid var(--border);
   padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px);
@@ -546,7 +559,9 @@ a {
 
 /* Pantallas centradas (login, PIN) */
 .center-screen {
-  min-height: 100dvh;
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
   background: var(--bg-deep);
   padding: calc(env(safe-area-inset-top) + 56px) 28px calc(env(safe-area-inset-bottom) + 28px);
   display: flex;
@@ -695,4 +710,30 @@ a {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Aviso de versión nueva */
+.update-banner {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 12px 8px;
+  padding: 10px 10px 10px 16px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--gold);
+}
+
+.update-banner .btn {
+  height: 40px;
+  border-radius: 12px;
+  font-size: 14px;
+  padding: 0 14px;
+}
+
+.notice {
+  font-size: 13px;
+  color: var(--gold-text);
+  line-height: 1.4;
 }
