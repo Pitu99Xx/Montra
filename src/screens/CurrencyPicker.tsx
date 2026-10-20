@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { CURRENCIES, currencyName, currencySymbol } from '../lib/currency';
-import { Sheet } from '../components/ui';
+import { Sheet, useSheetExit } from '../components/ui';
 import { IconSearch } from '../components/Icons';
 
 export function CurrencyPicker({
@@ -15,12 +15,13 @@ export function CurrencyPicker({
   onClose: () => void;
 }) {
   const [q, setQ] = useState('');
+  const { closing, close } = useSheetExit(onClose);
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
     return CURRENCIES.filter((c) => !s || c.toLowerCase().includes(s) || currencyName(c).toLowerCase().includes(s));
   }, [q]);
   return (
-    <Sheet title={title} onClose={onClose}>
+    <Sheet title={title} onClose={close} closing={closing}>
       <label className="field">
         <span className="label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <IconSearch size={16} /> Buscar
@@ -36,10 +37,13 @@ export function CurrencyPicker({
             aria-pressed={c === value}
             onClick={() => {
               onPick(c);
-              onClose();
+              close();
             }}
           >
-            <span className="acc-icon" style={{ background: 'var(--surface-2)', color: 'var(--gold-text)', width: 38, height: 38 }}>
+            <span
+              className="acc-icon"
+              style={{ background: 'var(--surface-2)', color: 'var(--gold-text)', width: 38, height: 38 }}
+            >
               {currencySymbol(c)}
             </span>
             <span className="row-main">

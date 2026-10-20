@@ -499,7 +499,6 @@ a {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  animation: fade 0.2s ease;
 }
 
 .sheet {
@@ -510,7 +509,6 @@ a {
   border-radius: 28px 28px 0 0;
   display: flex;
   flex-direction: column;
-  animation: rise 0.25s ease;
 }
 
 .sheet-head {
@@ -542,13 +540,6 @@ a {
 .sheet .list,
 .sheet .input {
   background: var(--bg);
-}
-
-@keyframes rise {
-  from {
-    transform: translateY(40px);
-    opacity: 0;
-  }
 }
 
 @keyframes fade {
@@ -736,4 +727,126 @@ a {
   font-size: 13px;
   color: var(--gold-text);
   line-height: 1.4;
+}
+
+/* ── Transiciones ─────────────────────────────────────────── */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tab-view {
+  animation: tab-in 0.32s var(--ease-out);
+}
+
+.tab-view.from-right {
+  --dx: 22px;
+}
+
+.tab-view.from-left {
+  --dx: -22px;
+}
+
+@keyframes tab-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--dx, 0));
+  }
+}
+
+/* Entrada de la app tras desbloquear y de las pantallas de acceso */
+.app,
+.center-screen {
+  animation: fade 0.3s ease;
+}
+
+.sheet-backdrop {
+  animation: fade 0.25s ease;
+}
+
+.sheet {
+  animation: sheet-in 0.38s var(--ease-out);
+}
+
+.sheet-backdrop.closing {
+  animation: fade-out 0.22s ease forwards;
+}
+
+.sheet.closing {
+  animation: sheet-out 0.22s ease-in forwards;
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.update-banner {
+  animation: banner-in 0.4s var(--ease-out);
+}
+
+@keyframes banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Respuesta al tocar */
+.btn,
+.chip,
+.key,
+.icon-btn,
+.tab,
+.segmented button,
+.row {
+  transition:
+    transform 0.15s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.btn:active:not(:disabled),
+.chip:active,
+.icon-btn:active,
+.key:active {
+  transform: scale(0.96);
+}
+
+button.row:active {
+  background-color: var(--surface-2);
+}
+
+.tab:active {
+  transform: scale(0.92);
+}
+
+.total-value,
+.pin-dots span {
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

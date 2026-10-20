@@ -49,7 +49,11 @@ export function PinPad({
 
   return (
     <>
-      <div className={`pin-dots${shake ? ' shake' : ''}`} aria-label={`${pin.length} de 4 dígitos introducidos`} role="status">
+      <div
+        className={`pin-dots${shake ? ' shake' : ''}`}
+        aria-label={`${pin.length} de 4 dígitos introducidos`}
+        role="status"
+      >
         {[0, 1, 2, 3].map((i) => (
           <span key={i} className={i < pin.length ? 'on' : ''} />
         ))}

@@ -34,7 +34,7 @@ export function AccountsScreen({
     last && prev ? (last.totalEUR - prev.totalEUR) * (base === 'EUR' ? 1 : (rates?.rates[base] ?? NaN)) : null;
   const lastUpdate = accounts.reduce<Date | undefined>(
     (m, a) => (a.updatedAt && (!m || a.updatedAt > m) ? a.updatedAt : m),
-    undefined
+    undefined,
   );
 
   const move = (i: number, dir: -1 | 1) => {
@@ -70,7 +70,9 @@ export function AccountsScreen({
         )}
         <span className="row-sub">
           {lastUpdate ? `Actualizado ${relativeDay(lastUpdate)}` : 'Sin datos todavía'}
-          {rates ? ` · Cambio BCE ${new Date(rates.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}` : ''}
+          {rates
+            ? ` · Cambio BCE ${new Date(rates.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}`
+            : ''}
         </span>
       </section>
 
@@ -131,7 +133,13 @@ export function AccountsScreen({
                   </button>
                   {editing && (
                     <span style={{ display: 'flex' }}>
-                      <button type="button" className="icon-btn" aria-label={`Subir ${a.name}`} disabled={i === 0} onClick={() => move(i, -1)}>
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        aria-label={`Subir ${a.name}`}
+                        disabled={i === 0}
+                        onClick={() => move(i, -1)}
+                      >
                         <IconUp size={20} />
                       </button>
                       <button

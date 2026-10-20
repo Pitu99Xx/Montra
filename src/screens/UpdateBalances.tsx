@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AccountIcon, Sheet, toast } from '../components/ui';
+import { AccountIcon, Sheet, toast, useSheetExit } from '../components/ui';
 import { updateBalances } from '../data/actions';
 import { computeTotalEUR, useStore } from '../data/store';
 import { convert, currencySymbol, formatAmount, formatMoney, parseAmount } from '../lib/currency';
@@ -7,14 +7,15 @@ import { convert, currencySymbol, formatAmount, formatMoney, parseAmount } from 
 /** Pantalla para poner al día todos los saldos de una vez (la abre el recordatorio). */
 export function UpdateBalances({ onClose }: { onClose: () => void }) {
   const { uid, accounts, rates, user, total } = useStore();
+  const { closing, close } = useSheetExit(onClose);
   const [values, setValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(accounts.map((a) => [a.id, formatAmount(a.balance, a.currency)]))
+    Object.fromEntries(accounts.map((a) => [a.id, formatAmount(a.balance, a.currency)])),
   );
   const [busy, setBusy] = useState(false);
 
   const parsed = useMemo(
     () => Object.fromEntries(accounts.map((a) => [a.id, parseAmount(values[a.id] ?? '')])),
-    [accounts, values]
+    [accounts, values],
   );
   const invalid = Object.values(parsed).some((v) => v === null);
   const preview = useMemo(() => {
@@ -30,7 +31,7 @@ export function UpdateBalances({ onClose }: { onClose: () => void }) {
     try {
       await updateBalances(uid, parsed as Record<string, number>, accounts, rates);
       toast('Saldos actualizados');
-      onClose();
+      close();
     } catch (e) {
       console.error(e);
       toast('No se pudieron guardar los saldos');
@@ -43,7 +44,8 @@ export function UpdateBalances({ onClose }: { onClose: () => void }) {
   return (
     <Sheet
       title="Actualizar saldos"
-      onClose={onClose}
+      onClose={close}
+      closing={closing}
       action={
         <button type="button" className="link-btn" onClick={save} disabled={invalid || busy}>
           Guardar

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { currencySymbol } from '../lib/currency';
 
 export function Switch({
@@ -44,14 +44,31 @@ export function AccountIcon({ currency, color, size = 42 }: { currency: string; 
   );
 }
 
+const SHEET_EXIT_MS = 220;
+
+/** Cierra una hoja con animación: primero baja y se desvanece, después se desmonta. */
+export function useSheetExit(onClose: () => void) {
+  const [closing, setClosing] = useState(false);
+  const started = useRef(false);
+  const close = useCallback(() => {
+    if (started.current) return;
+    started.current = true;
+    setClosing(true);
+    window.setTimeout(onClose, SHEET_EXIT_MS);
+  }, [onClose]);
+  return { closing, close };
+}
+
 export function Sheet({
   title,
   onClose,
+  closing = false,
   action,
   children,
 }: {
   title: string;
   onClose: () => void;
+  closing?: boolean;
   action?: ReactNode;
   children: ReactNode;
 }) {
@@ -66,8 +83,11 @@ export function Sheet({
     };
   }, [onClose]);
   return (
-    <div className="sheet-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={title}>
+    <div
+      className={`sheet-backdrop${closing ? ' closing' : ''}`}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className={`sheet${closing ? ' closing' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="sheet-head">
           <div>
             <button type="button" className="link-btn" onClick={onClose}>

@@ -85,6 +85,7 @@ export function App() {
 }
 
 type Tab = 'cuentas' | 'evolucion' | 'ajustes';
+const TABS: Tab[] = ['cuentas', 'evolucion', 'ajustes'];
 type SheetState =
   | { kind: 'account'; account: Account | null }
   | { kind: 'update' }
@@ -119,6 +120,19 @@ function Shell({ authUser }: { authUser: User }) {
   const [pendingUpdate, setPendingUpdate] = useState(() => wantsUpdate(location.href));
   const newVersion = useNewVersion();
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Dirección del deslizamiento al cambiar de pestaña (hacia la derecha o la izquierda)
+  const [tabDir, setTabDir] = useState<'from-right' | 'from-left'>('from-right');
+  const selectTab = useCallback(
+    (next: Tab) => {
+      if (next === tab) {
+        scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      setTabDir(TABS.indexOf(next) > TABS.indexOf(tab) ? 'from-right' : 'from-left');
+      setTab(next);
+    },
+    [tab],
+  );
 
   useEffect(() => {
     scrollRef.current?.scrollTo(0, 0);
@@ -204,26 +218,28 @@ function Shell({ authUser }: { authUser: User }) {
   return (
     <div className="app">
       <div className="app-scroll" ref={scrollRef}>
-        {tab === 'cuentas' && (
-          <AccountsScreen
-            onCreate={() => setSheet({ kind: 'account', account: null })}
-            onEdit={(account) => setSheet({ kind: 'account', account })}
-            onUpdateAll={() => setSheet({ kind: 'update' })}
-          />
-        )}
-        {tab === 'evolucion' && (
-          <Suspense fallback={<Splash />}>
-            <EvolutionScreen />
-          </Suspense>
-        )}
-        {tab === 'ajustes' && (
-          <SettingsScreen
-            authUser={authUser}
-            onChangePin={() => setChangingPin(true)}
-            onPickCurrency={() => setSheet({ kind: 'currency' })}
-            onEditReminder={(reminder) => setSheet({ kind: 'reminder', reminder })}
-          />
-        )}
+        <div key={tab} className={`tab-view ${tabDir}`}>
+          {tab === 'cuentas' && (
+            <AccountsScreen
+              onCreate={() => setSheet({ kind: 'account', account: null })}
+              onEdit={(account) => setSheet({ kind: 'account', account })}
+              onUpdateAll={() => setSheet({ kind: 'update' })}
+            />
+          )}
+          {tab === 'evolucion' && (
+            <Suspense fallback={<Splash />}>
+              <EvolutionScreen />
+            </Suspense>
+          )}
+          {tab === 'ajustes' && (
+            <SettingsScreen
+              authUser={authUser}
+              onChangePin={() => setChangingPin(true)}
+              onPickCurrency={() => setSheet({ kind: 'currency' })}
+              onEditReminder={(reminder) => setSheet({ kind: 'reminder', reminder })}
+            />
+          )}
+        </div>
       </div>
 
       {newVersion && (
@@ -240,9 +256,9 @@ function Shell({ authUser }: { authUser: User }) {
 
       <nav className="tabbar" aria-label="Secciones">
         <div className="tabbar-inner">
-          <TabButton id="cuentas" tab={tab} setTab={setTab} label="Cuentas" icon={<IconWallet />} />
-          <TabButton id="evolucion" tab={tab} setTab={setTab} label="Evolución" icon={<IconChart />} />
-          <TabButton id="ajustes" tab={tab} setTab={setTab} label="Ajustes" icon={<IconGear />} />
+          <TabButton id="cuentas" tab={tab} setTab={selectTab} label="Cuentas" icon={<IconWallet />} />
+          <TabButton id="evolucion" tab={tab} setTab={selectTab} label="Evolución" icon={<IconChart />} />
+          <TabButton id="ajustes" tab={tab} setTab={selectTab} label="Ajustes" icon={<IconGear />} />
         </div>
       </nav>
 

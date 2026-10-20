@@ -89,11 +89,25 @@ export function SettingsScreen({
 
       <section className="card" style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
         {authUser.photoURL ? (
-          <img src={authUser.photoURL} alt="" width={48} height={48} style={{ borderRadius: '50%' }} referrerPolicy="no-referrer" />
+          <img
+            src={authUser.photoURL}
+            alt=""
+            width={48}
+            height={48}
+            style={{ borderRadius: '50%' }}
+            referrerPolicy="no-referrer"
+          />
         ) : (
           <span
             className="acc-icon"
-            style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--gold)', color: '#07101F', fontSize: 16 }}
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              background: 'var(--gold)',
+              color: '#07101F',
+              fontSize: 16,
+            }}
           >
             {initials}
           </span>
@@ -139,7 +153,12 @@ export function SettingsScreen({
           <span className="row-title">Apariencia</span>
           <div className="segmented" role="group" aria-label="Apariencia" style={{ background: 'var(--bg)' }}>
             {THEMES.map((t) => (
-              <button type="button" key={t.id} aria-pressed={user.theme === t.id} onClick={() => saveUser(uid, { theme: t.id })}>
+              <button
+                type="button"
+                key={t.id}
+                aria-pressed={user.theme === t.id}
+                onClick={() => saveUser(uid, { theme: t.id })}
+              >
                 {t.label}
               </button>
             ))}
@@ -153,10 +172,21 @@ export function SettingsScreen({
           <span className="row-main">
             <span className="row-title">Permitir notificaciones</span>
           </span>
-          <Switch checked={user.notifications} onChange={togglePush} label="Permitir notificaciones" disabled={pushBusy} />
+          <Switch
+            checked={user.notifications}
+            onChange={togglePush}
+            label="Permitir notificaciones"
+            disabled={pushBusy}
+          />
         </div>
         {user.reminders.map((r) => (
-          <button type="button" key={r.id} className="row" onClick={() => onEditReminder(r)} style={{ opacity: r.enabled ? 1 : 0.55 }}>
+          <button
+            type="button"
+            key={r.id}
+            className="row"
+            onClick={() => onEditReminder(r)}
+            style={{ opacity: r.enabled ? 1 : 0.55 }}
+          >
             <IconBell size={20} style={{ color: 'var(--gold-text)' }} />
             <span className="row-main">
               <span className="row-title">
@@ -167,14 +197,20 @@ export function SettingsScreen({
             <IconChevron size={18} style={{ color: 'var(--faint)' }} />
           </button>
         ))}
-        <button type="button" className="row" onClick={() => onEditReminder(null)} style={{ color: 'var(--gold-text)' }}>
+        <button
+          type="button"
+          className="row"
+          onClick={() => onEditReminder(null)}
+          style={{ color: 'var(--gold-text)' }}
+        >
           <IconPlus size={20} />
           <span className="row-title">Añadir recordatorio</span>
         </button>
       </section>
       {isIOS() && !isStandalone() ? (
         <p className="hint">
-          Para recibir avisos en el iPhone instala Montra: en Safari pulsa Compartir → «Añadir a pantalla de inicio» y ábrela desde ahí.
+          Para recibir avisos en el iPhone instala Montra: en Safari pulsa Compartir → «Añadir a pantalla de inicio» y
+          ábrela desde ahí.
         </p>
       ) : (
         user.notifications && (

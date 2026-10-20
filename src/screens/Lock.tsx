@@ -31,7 +31,7 @@ export function LockScreen({ uid, pin, onUnlock }: { uid: string; pin: PinRecord
         inFlight.current = false;
       }
     },
-    [uid, onUnlock]
+    [uid, onUnlock],
   );
 
   // La pantalla de bloqueo se monta al pasar a segundo plano: se lanza Face ID solo

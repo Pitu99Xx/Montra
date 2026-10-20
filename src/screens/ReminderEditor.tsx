@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sheet, Switch } from '../components/ui';
+import { Sheet, Switch, useSheetExit } from '../components/ui';
 import type { Reminder } from '../data/model';
 import { saveUser } from '../data/actions';
 import { useStore } from '../data/store';
@@ -36,11 +36,15 @@ function todayIn(tz: string): { date: string; minutes: number } {
     hourCycle: 'h23',
   }).formatToParts(new Date());
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '00';
-  return { date: `${get('year')}-${get('month')}-${get('day')}`, minutes: Number(get('hour')) * 60 + Number(get('minute')) };
+  return {
+    date: `${get('year')}-${get('month')}-${get('day')}`,
+    minutes: Number(get('hour')) * 60 + Number(get('minute')),
+  };
 }
 
 export function ReminderEditor({ reminder, onClose }: { reminder: Reminder | null; onClose: () => void }) {
   const { uid, user } = useStore();
+  const { closing, close } = useSheetExit(onClose);
   const [days, setDays] = useState<number[]>(reminder?.days ?? [1]);
   const [time, setTime] = useState(reminder?.time ?? '09:00');
   const [enabled, setEnabled] = useState(reminder?.enabled ?? true);
@@ -59,19 +63,20 @@ export function ReminderEditor({ reminder, onClose }: { reminder: Reminder | nul
     if (h * 60 + m <= now.minutes) reminderState[id] = now.date;
     else delete reminderState[id];
     await saveUser(uid, { reminders, reminderState, timezone: tz });
-    onClose();
+    close();
   };
 
   const remove = async () => {
     if (!reminder) return;
     await saveUser(uid, { reminders: user.reminders.filter((r) => r.id !== reminder.id) });
-    onClose();
+    close();
   };
 
   return (
     <Sheet
       title={reminder ? 'Recordatorio' : 'Nuevo recordatorio'}
-      onClose={onClose}
+      onClose={close}
+      closing={closing}
       action={
         <button type="button" className="link-btn" onClick={save} disabled={!valid}>
           Guardar
@@ -105,10 +110,19 @@ export function ReminderEditor({ reminder, onClose }: { reminder: Reminder | nul
 
       <label className="field">
         <span className="label">Hora</span>
-        <input className="input num" type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ fontSize: 24 }} />
+        <input
+          className="input num"
+          type="time"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          style={{ fontSize: 24 }}
+        />
       </label>
 
-      <div className="card" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg)' }}>
+      <div
+        className="card"
+        style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg)' }}
+      >
         <div className="row-main">
           <span style={{ fontWeight: 600, fontSize: 15 }}>Activo</span>
           <span className="row-sub">«Actualizar el estado de las cuentas»</span>

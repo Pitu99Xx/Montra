@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AccountIcon, Sheet, Switch, toast } from '../components/ui';
+import { AccountIcon, Sheet, Switch, toast, useSheetExit } from '../components/ui';
 import { ACCOUNT_COLORS, ACCOUNT_TYPES, type Account } from '../data/model';
 import { deleteAccount, saveAccount } from '../data/actions';
 import { useStore } from '../data/store';
@@ -8,6 +8,7 @@ import { CurrencyPicker } from './CurrencyPicker';
 
 export function AccountEditor({ account, onClose }: { account: Account | null; onClose: () => void }) {
   const { uid, accounts, rates, user, valueIn } = useStore();
+  const { closing, close } = useSheetExit(onClose);
   const isNew = !account;
   const [name, setName] = useState(account?.name ?? '');
   const [type, setType] = useState(account?.type ?? 'corriente');
@@ -41,9 +42,9 @@ export function AccountEditor({ account, onClose }: { account: Account | null; o
           order: account?.order ?? accounts.length,
         },
         accounts,
-        rates
+        rates,
       );
-      onClose();
+      close();
     } catch (e) {
       toast('No se pudo guardar la cuenta');
       console.error(e);
@@ -55,7 +56,7 @@ export function AccountEditor({ account, onClose }: { account: Account | null; o
     if (!account || !confirm(`¿Eliminar «${account.name}»? Su historial dejará de verse en la evolución.`)) return;
     setBusy(true);
     await deleteAccount(uid, account.id, accounts, rates);
-    onClose();
+    close();
   };
 
   if (picker) {
@@ -65,7 +66,8 @@ export function AccountEditor({ account, onClose }: { account: Account | null; o
   return (
     <Sheet
       title={isNew ? 'Nueva cuenta' : 'Editar cuenta'}
-      onClose={onClose}
+      onClose={close}
+      closing={closing}
       action={
         <button type="button" className="link-btn" onClick={save} disabled={!valid || busy}>
           Guardar
@@ -141,7 +143,13 @@ export function AccountEditor({ account, onClose }: { account: Account | null; o
         <span className="label">Tipo</span>
         <div className="chips">
           {ACCOUNT_TYPES.map((t) => (
-            <button type="button" key={t.id} className="chip" aria-pressed={t.id === type} onClick={() => setType(t.id)}>
+            <button
+              type="button"
+              key={t.id}
+              className="chip"
+              aria-pressed={t.id === type}
+              onClick={() => setType(t.id)}
+            >
               {t.label}
             </button>
           ))}
@@ -171,7 +179,10 @@ export function AccountEditor({ account, onClose }: { account: Account | null; o
         </span>
       </label>
 
-      <div className="card" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg)' }}>
+      <div
+        className="card"
+        style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg)' }}
+      >
         <div className="row-main">
           <span style={{ fontWeight: 600, fontSize: 15 }}>Incluir en el total</span>
           <span className="row-sub">Suma en «Cuentas» y «Evolución»</span>

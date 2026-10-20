@@ -2,6 +2,12 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.3.0 · 20 oct 2026
+
+- Transiciones suaves: al cambiar de pestaña el contenido se desliza hacia el lado al que vas; las hojas (cuenta, actualizar saldos, recordatorios, divisas) suben y bajan con animación al abrirse y cerrarse.
+- La app aparece con un fundido al desbloquearla; el aviso de versión nueva entra deslizándose.
+- Respuesta visual al tocar botones, filas y teclas. Si el iPhone tiene activado «Reducir movimiento», las animaciones se desactivan.
+
 ## 1.2.0 · 20 oct 2026
 
 - Evolución: el eje horizontal muestra siempre el periodo completo elegido (1 mes, 3 meses, 6 meses, 1 año), aunque todavía no haya registros en todo ese tiempo. «Todo» va desde el primer registro hasta hoy.
