@@ -2,6 +2,10 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.13.1 · 20 oct 2026
+
+- Fechas de proyectos y movimientos en formato cerrado, con desplegables: Día / Mes / Año si es exacta y Mes / Año si es aproximada (antes, en algunos navegadores, el mes se escribía como texto). El día se ajusta al mes elegido (por ejemplo, febrero llega hasta el 28 o el 29).
+
 ## 1.13.0 · 20 oct 2026
 
 - Proyectos con fecha propia: en «Editar proyecto» puedes darle una fecha exacta o aproximada al proyecto entero. Mientras la tenga, todo el proyecto se suma o resta de golpe en esa fecha en la previsión; las fechas de cada movimiento se conservan (se ven tachadas) pero no cuentan.

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Sheet, toast, useSheetExit } from '../components/ui';
 import { IconTrash } from '../components/Icons';
+import { DateSelect } from '../components/DateSelect';
 import { ACCOUNT_COLORS, type Movement, type MovementDateMode, type MovementKind, type Project } from '../data/model';
 import {
   deleteMovement,
@@ -145,23 +146,9 @@ export function ProjectEditor({
             Aproximada
           </button>
         </div>
-        {dateMode === 'exact' && (
-          <input
-            className="input"
-            type="date"
-            value={exact}
-            onChange={(e) => setExact(e.target.value)}
-            aria-label="Fecha del proyecto"
-          />
-        )}
+        {dateMode === 'exact' && <DateSelect exact value={exact} onChange={setExact} label="Fecha del proyecto" />}
         {dateMode === 'month' && (
-          <input
-            className="input"
-            type="month"
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-            aria-label="Mes del proyecto"
-          />
+          <DateSelect exact={false} value={month} onChange={setMonth} label="Fecha del proyecto" />
         )}
         <span className="hint" style={{ padding: 0 }}>
           {dateMode === 'none'
@@ -375,24 +362,8 @@ export function MovementEditor({
             Sin fecha
           </button>
         </div>
-        {dateMode === 'exact' && (
-          <input
-            className="input"
-            type="date"
-            value={exact}
-            onChange={(e) => setExact(e.target.value)}
-            aria-label="Fecha"
-          />
-        )}
-        {dateMode === 'month' && (
-          <input
-            className="input"
-            type="month"
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-            aria-label="Mes"
-          />
-        )}
+        {dateMode === 'exact' && <DateSelect exact value={exact} onChange={setExact} label="Fecha" />}
+        {dateMode === 'month' && <DateSelect exact={false} value={month} onChange={setMonth} label="Fecha" />}
         {projectHasDate(project) && (
           <span className="hint" style={{ padding: 0, color: 'var(--gold-text)' }}>
             El proyecto tiene fecha propia ({movementDateLabel({ dateMode: project.dateMode!, date: project.date })}):
