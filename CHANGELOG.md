@@ -2,6 +2,11 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.12.1 · 20 oct 2026
+
+- El resaltado al pasar el ratón o tocar una fila ocupa toda la casilla, hasta los bordes de la lista: cuentas, subcuentas (también la cuenta con subcuentas entera, con su flecha), Ajustes, Actualizar saldos, fichas de proyecto, selector de divisa y las cuentas de una actualización abierta en Registros.
+- Proyectos: la casilla de cada proyecto se resalta entera (también la zona de la marca) y, en el ordenador, la lista de movimientos previstos llega a los bordes del panel.
+
 ## 1.12.0 · 20 oct 2026
 
 - Nueva pestaña **Proyectos**: crea proyectos (un viaje, un coche, un bonus…) con gastos e ingresos previstos, cada uno en cualquier divisa y con fecha exacta, aproximada (solo mes) o sin fecha. Son previsiones: no cambian tus cuentas ni la evolución.

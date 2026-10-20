@@ -257,6 +257,7 @@ export function RecordsList({
 
               {isOpen && (
                 <div
+                  className="rec-entries"
                   style={{
                     borderTop: '1px solid var(--border)',
                     padding: '4px 16px 14px',

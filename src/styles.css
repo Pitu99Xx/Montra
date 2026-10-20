@@ -167,6 +167,17 @@ a {
   padding: 0 16px;
   display: flex;
   flex-direction: column;
+  /* Recorta el resaltado de las filas a las esquinas redondeadas */
+  overflow: hidden;
+}
+
+/* Lista sin caja propia, dentro de un panel (ordenador): las filas llegan a los bordes del panel */
+.list.flat {
+  background: none;
+  border: none;
+  border-radius: 0;
+  margin: 0 -20px;
+  padding: 0 20px;
 }
 
 .row {
@@ -843,6 +854,24 @@ button.row:active {
   background-color: var(--surface-2);
 }
 
+/* En una lista, el resaltado ocupa toda la casilla (también el margen interior y la sangría de las
+   subcuentas); la propia lista lo recorta en sus bordes */
+.list button.row:active,
+.rec-entries button.row:active,
+.list .group-block > .row:has(> button.row:active) {
+  box-shadow:
+    -200px 0 0 var(--surface-2),
+    200px 0 0 var(--surface-2);
+}
+
+.list .group-block > .row:has(> button.row:active) {
+  background-color: var(--surface-2);
+}
+
+.list .group-block > .row > button.row:active {
+  box-shadow: none;
+}
+
 .tab:active {
   transform: scale(0.92);
 }
@@ -1313,13 +1342,27 @@ input.input[type='time']::-webkit-date-and-time-value {
   button.row:hover,
   .share-row:hover,
   .share-sub:hover,
-  .proj-open:hover,
+  .proj-row:hover,
+  .list .group-block > .row:hover,
   .sidebar-link:hover {
     background-color: var(--surface-2);
   }
 
   .chip:hover {
     border-color: var(--gold);
+  }
+
+  .list button.row:hover,
+  .rec-entries button.row:hover,
+  .list .group-block > .row:hover {
+    box-shadow:
+      -200px 0 0 var(--surface-2),
+      200px 0 0 var(--surface-2);
+  }
+
+  .list .group-block > .row > button.row:hover {
+    box-shadow: none;
+    background-color: transparent;
   }
 
   .btn-primary:hover {

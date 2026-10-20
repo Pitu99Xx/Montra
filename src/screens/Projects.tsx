@@ -301,7 +301,10 @@ export function ProjectsScreen({
   );
 
   const upcoming = projection.steps.length > 0 && (
-    <div className={isDesktop ? 'card desk-panel' : ''} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div
+      className={isDesktop ? 'card desk-panel' : ''}
+      style={{ display: 'flex', flexDirection: 'column', gap: 10, overflow: isDesktop ? 'hidden' : undefined }}
+    >
       {isDesktop ? (
         <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Movimientos previstos</h2>
       ) : (
@@ -309,7 +312,7 @@ export function ProjectsScreen({
           Movimientos previstos
         </span>
       )}
-      <div className={isDesktop ? '' : 'list'}>
+      <div className={isDesktop ? 'list flat' : 'list'}>
         {projection.steps.map((s) => (
           <button
             type="button"
