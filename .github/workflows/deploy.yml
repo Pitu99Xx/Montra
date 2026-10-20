@@ -3,6 +3,7 @@ name: Desplegar en Firebase
 on:
   push:
     branches: [main]
+    paths-ignore: ['**.md']
   workflow_dispatch:
 
 concurrency:
