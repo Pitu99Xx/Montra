@@ -2,6 +2,15 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.12.0 · 20 oct 2026
+
+- Nueva pestaña **Proyectos**: crea proyectos (un viaje, un coche, un bonus…) con gastos e ingresos previstos, cada uno en cualquier divisa y con fecha exacta, aproximada (solo mes) o sin fecha. Son previsiones: no cambian tus cuentas ni la evolución.
+- Marca los proyectos que quieras y verás el total de hoy, el resultado neto de los marcados y el saldo final si se cumplen. Las divisas se convierten con el cambio del día, igual que las cuentas.
+- Proyección en el tiempo: tu historial real y, en discontinua, el saldo aplicando cada movimiento en su fecha. Puedes fijar un saldo mínimo y la app avisa si algún mes bajarías de él.
+- Margen de imprevistos por proyecto y escenarios pesimista / previsto / optimista.
+- Ordenador: en el Resumen, «Cuentas» ocupa lo mismo que la gráfica (si hay muchas se desplaza dentro y, si hay pocas, queda hueco) y las cuentas de la gráfica se desplazan en horizontal en vez de crecer hacia abajo.
+- Registros de «Todas las cuentas»: cada actualización muestra el total del día y la variación respecto a la anterior; en el ordenador, en columnas (fecha, origen, cuentas, total del día y variación).
+
 ## 1.11.1 · 20 oct 2026
 
 - Registros filtrados por cuenta: cada registro lleva el icono de su cuenta (divisa y color) y el resaltado al tocarlo ocupa toda la casilla, hasta las esquinas redondeadas.

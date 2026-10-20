@@ -18,6 +18,10 @@ Cloud Messaging y Hosting.
 - **Actualizar saldos:** todas las cuentas en una pantalla; cada guardado añade un punto a la evolución.
 - **Evolución:** gráfica diaria del total y de las cuentas que elijas; al tocar un punto se ven fecha y saldo.
 - **Historial:** cada valor introducido queda registrado; se puede editar (valor, fecha, nota) o borrar con opción de deshacer, desde la ficha de cada cuenta o desde «Registros» en Evolución.
+- **Proyectos:** previsiones con gastos e ingresos que aún no han ocurrido, en cualquier divisa y con fecha
+  exacta, aproximada (mes) o sin fecha. Al marcar proyectos se ve el saldo final si se cumplen, una proyección
+  en el tiempo con aviso de saldo mínimo y escenarios pesimista / optimista según el margen de cada proyecto.
+  No cambian las cuentas; se convierten siempre con el cambio del día.
 - **Ajustes:** cambiar PIN, Face ID, divisa del total, tema (oscuro / claro / sistema), notificaciones y
   recordatorios semanales con los días y la hora que quieras.
 
@@ -44,6 +48,9 @@ users/{uid}/accounts/{id}        cuenta y saldo actual (archived: eliminada; isG
 users/{uid}/entries/{id}         registro: saldo de una cuenta en un momento, con su origen,
                                  nota, tipos de cambio de ese momento y batchId si viene de
                                  «Actualizar saldos»
+users/{uid}/projects/{id}        proyecto: nombre, color, selected, margin (%) y sus
+                                 movimientos previstos (kind, concept, amount, currency,
+                                 dateMode exact|month|none, date)
 users/{uid}/devices/{id}         tokens de notificaciones
 rates/latest                     tipos de cambio del BCE (los escribe la función)
 ```

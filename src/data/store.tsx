@@ -6,7 +6,7 @@ import { computeTotalEUR } from './totals';
 import { autoGroupRevolut, migrateSnapshots, repairZeroDecimalAmounts, requestRatesRefresh } from './actions';
 import { buildSeries, type DayPoint } from './series';
 export { computeTotalEUR } from './totals';
-import { DEFAULT_USER, type Account, type Entry, type Rates, type UserDoc } from './model';
+import { DEFAULT_USER, type Account, type Entry, type Project, type Rates, type UserDoc } from './model';
 
 interface Store {
   uid: string;
@@ -28,6 +28,8 @@ interface Store {
   /** Divisas de las cuentas para las que todavía no hay tipo de cambio */
   missingRates: string[];
   valueIn: (amount: number, from: string) => number | null;
+  /** Proyectos (previsiones), ordenados */
+  projects: Project[];
 }
 
 const Ctx = createContext<Store | null>(null);
@@ -53,6 +55,7 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
   const [entriesLoaded, setEntriesLoaded] = useState(false);
   const [serverRates, setServerRates] = useState<Rates | null>(null);
   const [liveRates, setLiveRates] = useState<Rates | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
     const unsubs = [
@@ -89,6 +92,11 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
           }),
         );
         setEntriesLoaded(true);
+      }),
+      onSnapshot(query(collection(db, 'users', uid, 'projects'), orderBy('order')), (s) => {
+        setProjects(
+          s.docs.map((d) => ({ selected: true, margin: 0, movements: [], ...(d.data() as Partial<Project>), id: d.id }) as Project),
+        );
       }),
       onSnapshot(
         doc(db, 'rates', 'latest'),
@@ -197,8 +205,9 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
       ],
       total: totalEUR === null ? null : convert(totalEUR, 'EUR', base, rates),
       valueIn: (amount, from) => convert(amount, from, base, rates),
+      projects,
     };
-  }, [uid, user, userLoaded, accounts, allAccounts, accountsLoaded, entries, entriesLoaded, series, rates]);
+  }, [uid, user, userLoaded, accounts, allAccounts, accountsLoaded, entries, entriesLoaded, series, rates, projects]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -79,6 +79,8 @@ export interface UserDoc {
   autoGroupDone?: boolean;
   /** Ya se repararon los importes sin decimales mal leídos (1.10.4) */
   zeroDecimalFixed?: boolean;
+  /** Proyectos: saldo mínimo deseado (en la divisa base) para avisar en la proyección */
+  projectMin?: number | null;
 }
 
 export interface SnapshotAccount {
@@ -131,3 +133,34 @@ export const DEFAULT_USER: UserDoc = {
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Madrid',
   reminders: [],
 };
+
+/** Proyectos: previsiones de gastos e ingresos que aún no han ocurrido (no cambian las cuentas). */
+export type MovementKind = 'expense' | 'income';
+/** Fecha exacta (AAAA-MM-DD), aproximada (solo mes, AAAA-MM) o sin fecha */
+export type MovementDateMode = 'exact' | 'month' | 'none';
+
+export interface Movement {
+  id: string;
+  kind: MovementKind;
+  concept: string;
+  /** Importe positivo; el signo lo da «kind» */
+  amount: number;
+  currency: string;
+  dateMode: MovementDateMode;
+  date?: string | null;
+  note?: string;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  color: string;
+  /** Incluido en la simulación */
+  selected: boolean;
+  /** Margen de imprevistos en % para los escenarios optimista y pesimista */
+  margin: number;
+  order: number;
+  movements: Movement[];
+}
+
+export type Scenario = 'expected' | 'pessimistic' | 'optimistic';

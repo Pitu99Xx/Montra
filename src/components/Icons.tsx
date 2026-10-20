@@ -138,3 +138,14 @@ export const IconGrid = (p: P) => (
     <rect x="3" y="16" width="7" height="5" rx="1.5" />
   </Base>
 );
+export const IconBriefcase = (p: P) => (
+  <Base {...p}>
+    <path d="M4 7h16v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7z" />
+    <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M4 12h16" />
+  </Base>
+);
+export const IconCheck = (p: P) => (
+  <Base strokeWidth={3} {...p}>
+    <path d="M5 12l5 5 9-10" />
+  </Base>
+);

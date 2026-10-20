@@ -2,11 +2,11 @@ import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { getRedirectResult, onAuthStateChanged, signOut, type User } from 'firebase/auth';
 import { auth } from './firebase';
 import { ToastHost, Spinner } from './components/ui';
-import { IconChart, IconGear, IconGrid, IconWallet } from './components/Icons';
+import { IconBriefcase, IconChart, IconGear, IconGrid, IconWallet } from './components/Icons';
 import { Sidebar } from './components/Sidebar';
 import { DESKTOP_QUERY, useMedia } from './lib/useMedia';
 import { claimOrCheckOwner, saveUser, type OwnerState } from './data/actions';
-import type { Account, Entry, Reminder, ThemePref } from './data/model';
+import type { Account, Entry, Movement, Project, Reminder, ThemePref } from './data/model';
 import { StoreProvider, useStore } from './data/store';
 import { lockSuppressed } from './lib/lockGuard';
 import { lockOnReturn, lockOnStartup, markActive, markHidden, setGraceMinutes } from './lib/lockTimer';
@@ -24,10 +24,13 @@ import { PinSetup } from './screens/PinSetup';
 import { ReminderEditor } from './screens/ReminderEditor';
 import { SettingsScreen } from './screens/Settings';
 import { UpdateBalances } from './screens/UpdateBalances';
+import { ProjectDetail } from './screens/ProjectDetail';
+import { MovementEditor, ProjectEditor, ProjectMinEditor } from './screens/ProjectEditors';
 
 // La gráfica (Recharts) se carga solo al abrir «Evolución»
 const EvolutionScreen = lazy(() => import('./screens/Evolution').then((m) => ({ default: m.EvolutionScreen })));
 const SummaryScreen = lazy(() => import('./screens/Summary').then((m) => ({ default: m.SummaryScreen })));
+const ProjectsScreen = lazy(() => import('./screens/Projects').then((m) => ({ default: m.ProjectsScreen })));
 
 const THEME_KEY = 'montra.theme';
 
@@ -92,14 +95,19 @@ export function App() {
 }
 
 // «Resumen» solo existe en la versión de ordenador
-type Tab = 'resumen' | 'cuentas' | 'evolucion' | 'ajustes';
-const TABS: Tab[] = ['resumen', 'cuentas', 'evolucion', 'ajustes'];
+type Tab = 'resumen' | 'cuentas' | 'evolucion' | 'proyectos' | 'ajustes';
+const TABS: Tab[] = ['resumen', 'cuentas', 'evolucion', 'proyectos', 'ajustes'];
+/** En la pila de fichas, los proyectos van con este prefijo (el resto son cuentas) */
+const PROJ = 'p:';
 type SheetState =
   | { kind: 'account'; account: Account | null; parentId?: string }
   | { kind: 'update'; groupId?: string }
   | { kind: 'currency' }
   | { kind: 'reminder'; reminder: Reminder | null }
   | { kind: 'entry'; entry: Entry | null; account: Account }
+  | { kind: 'project'; project: Project | null }
+  | { kind: 'movement'; project: Project; movement: Movement | null }
+  | { kind: 'projectMin' }
   | null;
 
 function wantsUpdate(url: string) {
@@ -111,7 +119,7 @@ function wantsUpdate(url: string) {
 }
 
 function Shell({ authUser }: { authUser: User }) {
-  const { uid, user, userLoaded, accounts } = useStore();
+  const { uid, user, userLoaded, accounts, projects } = useStore();
   const [locked, setLocked] = useState(lockOnStartup);
   const [resetPin, setResetPin] = useState(() => {
     try {
@@ -155,9 +163,11 @@ function Shell({ authUser }: { authUser: User }) {
   // Si una cuenta abierta deja de existir (eliminada), se quita de la pila
   useEffect(() => {
     if (closingTop) return;
-    const alive = detailStack.filter((id) => accounts.some((a) => a.id === id));
+    const alive = detailStack.filter((id) =>
+      id.startsWith(PROJ) ? projects.some((p) => PROJ + p.id === id) : accounts.some((a) => a.id === id),
+    );
     if (alive.length !== detailStack.length) setDetailStack(alive);
-  }, [detailStack, accounts, closingTop]);
+  }, [detailStack, accounts, projects, closingTop]);
   // Dirección del deslizamiento al cambiar de pestaña (hacia la derecha o la izquierda)
   const [tabDir, setTabDir] = useState<'from-right' | 'from-left'>('from-right');
   const selectTab = useCallback(
@@ -277,6 +287,7 @@ function Shell({ authUser }: { authUser: User }) {
             { id: 'resumen', label: 'Resumen', icon: <IconGrid size={20} /> },
             { id: 'cuentas', label: 'Cuentas', icon: <IconWallet size={20} /> },
             { id: 'evolucion', label: 'Evolución', icon: <IconChart size={20} /> },
+            { id: 'proyectos', label: 'Proyectos', icon: <IconBriefcase size={20} /> },
             { id: 'ajustes', label: 'Ajustes', icon: <IconGear size={20} /> },
           ]}
         />
@@ -304,6 +315,15 @@ function Shell({ authUser }: { authUser: User }) {
           {tab === 'evolucion' && (
             <Suspense fallback={<Splash />}>
               <EvolutionScreen onEditEntry={(entry, account) => setSheet({ kind: 'entry', entry, account })} />
+            </Suspense>
+          )}
+          {tab === 'proyectos' && (
+            <Suspense fallback={<Splash />}>
+              <ProjectsScreen
+                onOpen={(p) => openDetail(PROJ + p.id)}
+                onCreate={() => setSheet({ kind: 'project', project: null })}
+                onEditMin={() => setSheet({ kind: 'projectMin' })}
+              />
             </Suspense>
           )}
           {tab === 'ajustes' && (
@@ -334,6 +354,7 @@ function Shell({ authUser }: { authUser: User }) {
           <div className="tabbar-inner">
             <TabButton id="cuentas" tab={tab} setTab={selectTab} label="Cuentas" icon={<IconWallet />} />
             <TabButton id="evolucion" tab={tab} setTab={selectTab} label="Evolución" icon={<IconChart />} />
+            <TabButton id="proyectos" tab={tab} setTab={selectTab} label="Proyectos" icon={<IconBriefcase />} />
             <TabButton id="ajustes" tab={tab} setTab={selectTab} label="Ajustes" icon={<IconGear />} />
           </div>
         </nav>
@@ -349,9 +370,23 @@ function Shell({ authUser }: { authUser: User }) {
       )}
 
       {detailStack.map((id, i) => {
+        const closing = closingTop && i === detailStack.length - 1;
+        if (id.startsWith(PROJ)) {
+          const project = projects.find((p) => PROJ + p.id === id);
+          if (!project) return null;
+          return (
+            <ProjectDetail
+              key={`${id}-${i}`}
+              project={project}
+              closing={closing}
+              onBack={closeDetail}
+              onEdit={() => setSheet({ kind: 'project', project })}
+              onEditMovement={(movement) => setSheet({ kind: 'movement', project, movement })}
+            />
+          );
+        }
         const acc = accounts.find((a) => a.id === id);
         if (!acc) return null;
-        const closing = closingTop && i === detailStack.length - 1;
         return acc.isGroup ? (
           <GroupDetail
             key={`${id}-${i}`}
@@ -381,6 +416,17 @@ function Shell({ authUser }: { authUser: User }) {
       {sheet?.kind === 'account' && <AccountEditor account={sheet.account} parentId={sheet.parentId} onClose={close} />}
       {sheet?.kind === 'entry' && <EntryEditor entry={sheet.entry} account={sheet.account} onClose={close} />}
       {sheet?.kind === 'update' && <UpdateBalances groupId={sheet.groupId} onClose={close} />}
+      {sheet?.kind === 'project' && (
+        <ProjectEditor project={sheet.project} onClose={close} onCreated={(id) => openDetail(PROJ + id)} />
+      )}
+      {sheet?.kind === 'movement' && (
+        <MovementEditor
+          project={projects.find((p) => p.id === sheet.project.id) ?? sheet.project}
+          movement={sheet.movement}
+          onClose={close}
+        />
+      )}
+      {sheet?.kind === 'projectMin' && <ProjectMinEditor onClose={close} />}
       {sheet?.kind === 'reminder' && <ReminderEditor reminder={sheet.reminder} onClose={close} />}
       {sheet?.kind === 'currency' && (
         <CurrencyPicker

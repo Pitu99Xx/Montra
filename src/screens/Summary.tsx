@@ -34,7 +34,11 @@ export function SummaryScreen({
     const first6 = series.find((p) => p.t >= from && p.total !== null);
     const six =
       first6 && last?.total != null && first6 !== last
-        ? { v: last.total - first6.total!, pct: first6.total ? ((last.total - first6.total!) / Math.abs(first6.total!)) * 100 : null, t: first6.t }
+        ? {
+            v: last.total - first6.total!,
+            pct: first6.total ? ((last.total - first6.total!) / Math.abs(first6.total!)) * 100 : null,
+            t: first6.t,
+          }
         : null;
     let foreign = 0;
     const codes = new Set<string>();
@@ -56,11 +60,18 @@ export function SummaryScreen({
     return { a, kids, value };
   });
   const shareBase = total && total > 0 ? total : null;
-  const today = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const today = new Date().toLocaleDateString('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
     <main className="desk-page">
-      <header style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end', justifyContent: 'space-between' }}>
+      <header
+        style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-end', justifyContent: 'space-between' }}
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span className="row-sub" style={{ fontSize: 14 }}>
             {today.charAt(0).toUpperCase() + today.slice(1)}
@@ -108,7 +119,9 @@ export function SummaryScreen({
         <div className="card total-card">
           <span className="eyebrow">En otras divisas</span>
           <span className="num" style={{ fontSize: 36, fontWeight: 500 }}>
-            {shareBase ? `${((kpis.foreign / shareBase) * 100).toLocaleString('es-ES', { maximumFractionDigits: 1 })} %` : '—'}
+            {shareBase
+              ? `${((kpis.foreign / shareBase) * 100).toLocaleString('es-ES', { maximumFractionDigits: 1 })} %`
+              : '—'}
           </span>
           <span className="row-sub" style={{ fontSize: 14 }}>
             {kpis.codes.length ? `${formatMoney(kpis.foreign, base)} en ${kpis.codes.join(' y ')}` : `Todo en ${base}`}
@@ -121,59 +134,61 @@ export function SummaryScreen({
           <EvolutionScreen embedded onEditEntry={onEditEntry} />
         </div>
 
-        <div className="card desk-panel" style={{ gap: 4 }}>
+        <div className="card desk-panel desk-fit" style={{ gap: 4 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingBottom: 6 }}>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Cuentas</h2>
             <span className="row-sub">Peso en el total</span>
           </div>
-          {rows.map(({ a, kids, value }) => {
-            const share = shareBase && value !== null ? Math.max(0, (value / shareBase) * 100) : 0;
-            return (
-              <div key={a.id}>
-                <button type="button" className="share-row" onClick={() => onOpen(a)}>
-                  {a.isGroup ? (
-                    <GroupIcon name={a.name} color={a.color} back={kids[1]?.color} size={38} />
-                  ) : (
-                    <AccountIcon currency={a.currency} color={a.color} size={38} />
+          <div className="desk-fit-body">
+            {rows.map(({ a, kids, value }) => {
+              const share = shareBase && value !== null ? Math.max(0, (value / shareBase) * 100) : 0;
+              return (
+                <div key={a.id}>
+                  <button type="button" className="share-row" onClick={() => onOpen(a)}>
+                    {a.isGroup ? (
+                      <GroupIcon name={a.name} color={a.color} back={kids[1]?.color} size={38} />
+                    ) : (
+                      <AccountIcon currency={a.currency} color={a.color} size={38} />
+                    )}
+                    <span className="row-main" style={{ gap: 6 }}>
+                      <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                        <span className="row-title" style={{ fontSize: 15 }}>
+                          {a.name}
+                        </span>
+                        <span className="num" style={{ fontSize: 16, whiteSpace: 'nowrap' }}>
+                          {a.isGroup
+                            ? value !== null
+                              ? formatMoney(value, base)
+                              : '—'
+                            : formatMoney(a.balance, a.currency)}
+                        </span>
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span className="share-track">
+                          <span style={{ width: `${share}%`, background: a.color }} />
+                        </span>
+                        <span className="row-sub" style={{ fontSize: 12, minWidth: 92, textAlign: 'right' }}>
+                          {!a.isGroup && a.currency !== base && value !== null && `≈ ${formatMoney(value, base)} · `}
+                          {share.toLocaleString('es-ES', { maximumFractionDigits: 1 })} %
+                        </span>
+                      </span>
+                    </span>
+                  </button>
+                  {kids.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', padding: '0 0 6px 56px', gap: 2 }}>
+                      {kids.map((k) => (
+                        <button type="button" key={k.id} className="share-sub" onClick={() => onOpen(k)}>
+                          <span className="dot" style={{ background: k.color, width: 8, height: 8 }} />
+                          <span style={{ flex: 1, textAlign: 'left' }}>{k.name}</span>
+                          <span className="num">{formatMoney(k.balance, k.currency)}</span>
+                        </button>
+                      ))}
+                    </div>
                   )}
-                  <span className="row-main" style={{ gap: 6 }}>
-                    <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                      <span className="row-title" style={{ fontSize: 15 }}>
-                        {a.name}
-                      </span>
-                      <span className="num" style={{ fontSize: 16, whiteSpace: 'nowrap' }}>
-                        {a.isGroup
-                          ? value !== null
-                            ? formatMoney(value, base)
-                            : '—'
-                          : formatMoney(a.balance, a.currency)}
-                      </span>
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span className="share-track">
-                        <span style={{ width: `${share}%`, background: a.color }} />
-                      </span>
-                      <span className="row-sub" style={{ fontSize: 12, minWidth: 92, textAlign: 'right' }}>
-                        {!a.isGroup && a.currency !== base && value !== null && `≈ ${formatMoney(value, base)} · `}
-                        {share.toLocaleString('es-ES', { maximumFractionDigits: 1 })} %
-                      </span>
-                    </span>
-                  </span>
-                </button>
-                {kids.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', padding: '0 0 6px 56px', gap: 2 }}>
-                    {kids.map((k) => (
-                      <button type="button" key={k.id} className="share-sub" onClick={() => onOpen(k)}>
-                        <span className="dot" style={{ background: k.color, width: 8, height: 8 }} />
-                        <span style={{ flex: 1, textAlign: 'left' }}>{k.name}</span>
-                        <span className="num">{formatMoney(k.balance, k.currency)}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 

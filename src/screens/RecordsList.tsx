@@ -7,6 +7,7 @@ import { accountIdsFor, topLevel } from '../data/groups';
 import { useStore } from '../data/store';
 import { formatMoney } from '../lib/currency';
 import { SourceIcon, deltaOf } from './AccountDetail';
+import { DESKTOP_QUERY, useMedia } from '../lib/useMedia';
 
 const PAGE = 8;
 const groupDate = (d: Date) =>
@@ -26,6 +27,7 @@ export function RecordsList({
   const [limit, setLimit] = useState(PAGE);
   const byId = useMemo(() => new Map(allAccounts.map((a) => [a.id, a])), [allAccounts]);
   const base = user.baseCurrency;
+  const isDesktop = useMedia(DESKTOP_QUERY);
 
   // «Todas las cuentas»: solo las actualizaciones de saldos (ya incluyen todas las cuentas).
   // Con una cuenta elegida: todos sus registros, también los sueltos (saldo inicial, ediciones…).
@@ -155,8 +157,19 @@ export function RecordsList({
         </div>
       )}
 
+      {!filter && isDesktop && groups.length > 0 && (
+        <div className="rec-cols rec-head" aria-hidden="true">
+          <span />
+          <span>Fecha</span>
+          <span>Origen</span>
+          <span>Cuentas</span>
+          <span className="r">Total del día</span>
+          <span className="r">Variación</span>
+        </div>
+      )}
+
       {!filter &&
-        groups.slice(0, limit).map((g) => {
+        groups.slice(0, limit).map((g, gi) => {
           const isOpen = open === g.id;
           const first = g.entries[0];
           const single = g.entries.length === 1;
@@ -164,49 +177,83 @@ export function RecordsList({
           const title = single
             ? `${account?.name ?? 'Cuenta'} · ${SOURCE_LABEL[first.source]}`
             : `Actualización de saldos · ${g.entries.length} ${g.entries.length === 1 ? 'cuenta' : 'cuentas'}`;
-          const dayTotal = totalsByDay.get(dayKey(g.at));
+          const dayTotal = totalsByDay.get(dayKey(g.at)) ?? null;
+          // Variación del total respecto a la actualización anterior
+          const prevGroup = groups[gi + 1];
+          const prevTotal = prevGroup ? (totalsByDay.get(dayKey(prevGroup.at)) ?? null) : null;
+          const change = dayTotal !== null && prevTotal !== null ? dayTotal - prevTotal : null;
+          const changeText =
+            change === null
+              ? null
+              : Math.abs(change) < 0.005
+                ? 'sin cambios'
+                : `${change > 0 ? '+' : '−'}${formatMoney(Math.abs(change), base)}`;
+          const changeCls =
+            change === null || Math.abs(change) < 0.005 ? 'delta-same' : change > 0 ? 'delta-up' : 'delta-down';
           return (
             <div
               key={g.id}
               className="card"
               style={{ overflow: 'hidden', borderColor: isOpen ? 'var(--gold)' : undefined }}
             >
-              <button
-                type="button"
-                className="row"
-                aria-expanded={isOpen}
-                onClick={() => toggle(g.id, g.at)}
-                style={{ padding: '14px 16px', border: 'none' }}
-              >
-                <SourceIcon source={single ? first.source : 'update'} />
-                <span className="row-main">
+              {isDesktop ? (
+                <button
+                  type="button"
+                  className="row rec-cols"
+                  aria-expanded={isOpen}
+                  onClick={() => toggle(g.id, g.at)}
+                  style={{ padding: '12px 16px', border: 'none' }}
+                >
+                  <SourceIcon source={single ? first.source : 'update'} />
                   <span style={{ fontSize: 15, fontWeight: 600 }}>{groupDate(g.at)}</span>
-                  <span
-                    className="row-sub"
-                    style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                  >
-                    {title}
+                  <span className="row-sub" style={{ fontSize: 14 }}>
+                    {single
+                      ? `${account?.name ?? 'Cuenta'} · ${SOURCE_LABEL[first.source]}`
+                      : 'Actualización de saldos'}
                   </span>
-                </span>
-                {single ? (
-                  <span className="row-end">
-                    <span className="num" style={{ fontSize: 17 }}>
-                      {formatMoney(first.balance, first.currency)}
+                  <span className="row-sub" style={{ fontSize: 14 }}>
+                    {g.entries.length} {g.entries.length === 1 ? 'cuenta' : 'cuentas'}
+                  </span>
+                  <span className="num r" style={{ fontSize: 17 }}>
+                    {dayTotal !== null ? formatMoney(dayTotal, base) : '—'}
+                  </span>
+                  <span className={`r ${changeCls}`} style={{ fontSize: 14, fontWeight: 600 }}>
+                    {changeText ?? '—'}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="row"
+                  aria-expanded={isOpen}
+                  onClick={() => toggle(g.id, g.at)}
+                  style={{ padding: '14px 16px', border: 'none' }}
+                >
+                  <SourceIcon source={single ? first.source : 'update'} />
+                  <span className="row-main">
+                    <span style={{ fontSize: 15, fontWeight: 600 }}>{groupDate(g.at)}</span>
+                    <span
+                      className="row-sub"
+                      style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    >
+                      {title}
                     </span>
-                    <DeltaText entry={first} entries={entries} />
                   </span>
-                ) : (
-                  dayTotal !== undefined &&
-                  dayTotal !== null && (
+                  {dayTotal !== null && (
                     <span className="row-end">
                       <span className="num" style={{ fontSize: 17 }}>
                         {formatMoney(dayTotal, base)}
                       </span>
-                      <span className="row-sub">total del día</span>
+                      <span
+                        className={changeText ? changeCls : 'row-sub'}
+                        style={{ fontSize: 13, fontWeight: changeText ? 600 : 400 }}
+                      >
+                        {changeText ?? 'total del día'}
+                      </span>
                     </span>
-                  )
-                )}
-              </button>
+                  )}
+                </button>
+              )}
 
               {isOpen && (
                 <div

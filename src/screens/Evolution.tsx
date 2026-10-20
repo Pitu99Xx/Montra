@@ -336,7 +336,7 @@ export function EvolutionScreen({
           </p>
 
           <span className="eyebrow">Mostrar en la gráfica</span>
-          <div className="chips">
+          <div className={embedded ? 'chips scroll-x' : 'chips'}>
             <button
               type="button"
               className="chip round"
