@@ -89,14 +89,25 @@ function nowIn(tz: string): { date: string; weekday: number; minutes: number } {
   };
 }
 
-async function sendToUser(uid: string, data: Record<string, string>): Promise<number> {
+interface SendResult {
+  devices: number;
+  sent: number;
+  /** Códigos de error de FCM (sin tokens ni datos personales) */
+  errors: string[];
+}
+
+async function sendToUser(uid: string, data: Record<string, string>): Promise<SendResult> {
   const devices = await db.collection(`users/${uid}/devices`).get();
   const tokens = devices.docs.map((d) => d.get('token') as string).filter(Boolean);
-  if (!tokens.length) return 0;
+  if (!tokens.length) return { devices: 0, sent: 0, errors: [] };
   const res = await getMessaging().sendEachForMulticast({
     tokens,
     data,
-    webpush: { headers: { Urgency: 'high', TTL: '86400' } },
+    webpush: {
+      headers: { Urgency: 'high', TTL: '86400' },
+      // También como notificación: si el service worker no la pinta, el navegador puede hacerlo
+      notification: { title: data.title, body: data.body, icon: '/icons/icon-192.png', tag: data.tag },
+    },
   });
   // Limpiar dispositivos que ya no existen
   await Promise.all(
@@ -108,7 +119,8 @@ async function sendToUser(uid: string, data: Record<string, string>): Promise<nu
       return null;
     })
   );
-  return res.successCount;
+  const errors = res.responses.filter((r) => !r.success).map((r) => r.error?.code ?? 'desconocido');
+  return { devices: tokens.length, sent: res.successCount, errors };
 }
 
 /** Revisa cada 5 minutos si toca algún recordatorio «Actualizar el estado de las cuentas». */
@@ -127,7 +139,7 @@ export const sendReminders = onSchedule({ schedule: 'every 5 minutes', timeZone:
       return diff >= 0 && diff < 60 && state[r.id] !== now.date;
     });
     if (!due.length) continue;
-    const sent = await sendToUser(doc.id, {
+    const result = await sendToUser(doc.id, {
       title: 'Montra',
       body: DEFAULT_BODY,
       url: '/actualizar',
@@ -136,7 +148,7 @@ export const sendReminders = onSchedule({ schedule: 'every 5 minutes', timeZone:
     const patch: Record<string, string> = {};
     for (const r of due) patch[`reminderState.${r.id}`] = now.date;
     await doc.ref.update(patch);
-    logger.info('Recordatorio enviado', { uid: doc.id, sent });
+    logger.info('Recordatorio enviado', { devices: result.devices, sent: result.sent, errors: result.errors });
   }
 });
 
@@ -151,13 +163,16 @@ export const onUserRequest = onDocumentCreated('users/{uid}/requests/{reqId}', a
     if (Date.now() - fetchedAt > 60 * 60 * 1000) await refreshRates();
   }
   if (snap.get('type') === 'testPush') {
-    const sent = await sendToUser(event.params.uid, {
+    const result = await sendToUser(event.params.uid, {
       title: 'Montra',
       body: 'Las notificaciones funcionan correctamente ✓',
       url: '/',
       tag: 'montra-test',
     });
-    logger.info('Prueba enviada', { uid: event.params.uid, sent });
+    logger.info('Prueba enviada', result);
+    // La app espera este resultado para decir qué ha pasado
+    await snap.ref.set({ status: 'done', ...result, doneAt: FieldValue.serverTimestamp() }, { merge: true });
+    return;
   }
   await snap.ref.delete();
 });

@@ -5,14 +5,14 @@ import { Logo } from '../components/Logo';
 import { Switch, toast } from '../components/ui';
 import { IconBell, IconChevron, IconPlus } from '../components/Icons';
 import type { Reminder, ThemePref } from '../data/model';
-import { requestTestPush, saveUser } from '../data/actions';
+import { saveUser } from '../data/actions';
 import { useStore } from '../data/store';
 import { biometricAvailable, biometricEnabled, disableBiometric, enableBiometric } from '../lib/biometric';
 import { currencyName, currencySymbol } from '../lib/currency';
 import { withoutLock } from '../lib/lockGuard';
 import { DEFAULT_LOCK_MINUTES, LOCK_OPTIONS, setGraceMinutes } from '../lib/lockTimer';
 import { isIOS, isStandalone } from '../lib/platform';
-import { enablePush } from '../lib/push';
+import { enablePush, runTestPush } from '../lib/push';
 import { describeDays } from './ReminderEditor';
 
 const THEMES: { id: ThemePref; label: string }[] = [
@@ -242,8 +242,9 @@ export function SettingsScreen({
             className="link-btn"
             style={{ alignSelf: 'flex-start' }}
             onClick={async () => {
-              await requestTestPush(uid);
               toast('Enviando notificación de prueba…');
+              const msg = await runTestPush(uid);
+              toast('Notificación de prueba', { sub: msg });
             }}
           >
             Enviar notificación de prueba

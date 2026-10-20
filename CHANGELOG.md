@@ -2,6 +2,12 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.10.3 · 20 oct 2026
+
+- «Enviar notificación de prueba» ahora dice qué ha pasado: a cuántos dispositivos se ha enviado, si no hay ninguno registrado o qué error ha devuelto Firebase.
+- Antes de cada prueba, el dispositivo vuelve a registrarse (sin preguntar) por si su identificador de notificaciones había cambiado.
+- Los avisos se envían también como notificación estándar, para que el navegador los muestre aunque falle la app.
+
 ## 1.10.2 · 20 oct 2026
 
 - Ordenador: al abrir una ficha por la derecha (una cuenta, Revolut, una subcuenta…) el resto de la página se desenfoca; al pulsar en esa zona, o con la tecla Esc, se vuelve atrás.
