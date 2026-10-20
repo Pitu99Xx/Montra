@@ -115,20 +115,24 @@ export function RecordsList({
       )}
 
       {filter && flat.length > 0 && (
-        <div className="list">
+        <div className="list flush">
           {flat.slice(0, limit * 2).map((e) => {
             const acc = byId.get(e.accountId);
             return (
               <button
                 type="button"
                 key={e.id}
-                className="row"
+                className="row flush-row"
                 onClick={() => {
                   onSelectDay(dayKey(e.at));
                   if (acc) onEditEntry(e, acc);
                 }}
               >
-                <SourceIcon source={e.source} />
+                {acc ? (
+                  <AccountIcon currency={e.currency} color={acc.color} size={38} />
+                ) : (
+                  <SourceIcon source={e.source} />
+                )}
                 <span className="row-main">
                   <span style={{ fontSize: 15, fontWeight: 600 }}>{groupDate(e.at)}</span>
                   <span

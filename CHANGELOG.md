@@ -2,6 +2,10 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.11.1 · 20 oct 2026
+
+- Registros filtrados por cuenta: cada registro lleva el icono de su cuenta (divisa y color) y el resaltado al tocarlo ocupa toda la casilla, hasta las esquinas redondeadas.
+
 ## 1.11.0 · 20 oct 2026
 
 - Registros filtrados por una cuenta: se ven sus registros uno a uno (fecha, origen, saldo y diferencia con el anterior), sin tener que abrir cada actualización. Con una cuenta con subcuentas, cada registro indica de qué subcuenta es. Al tocar uno se abre para corregirlo y se marca su día en la gráfica.

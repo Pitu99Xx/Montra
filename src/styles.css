@@ -1428,3 +1428,8 @@ input.input[type='time']::-webkit-date-and-time-value {
     backdrop-filter: blur(6px);
   }
 }
+
+/* Filas de lista sin márgenes laterales: el resaltado llega hasta las esquinas redondeadas */
+.list.flush > .flush-row {
+  padding: 12px 16px;
+}
