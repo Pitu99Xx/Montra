@@ -2,6 +2,11 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.10.1 · 20 oct 2026
+
+- Inicio de sesión rediseñado para ordenador: la marca, el lema y lo que hace Montra a la izquierda, y una tarjeta de acceso con Google a la derecha.
+- Las pantallas de código PIN y de acceso restringido ya no se estiran en ordenador: quedan centradas con un ancho cómodo.
+
 ## 1.10.0 · 20 oct 2026
 
 - **Versión para ordenador.** Con la ventana ancha (desde 1024 px) Montra cambia sola de diseño:
