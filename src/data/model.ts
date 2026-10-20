@@ -17,6 +17,10 @@ export interface Account {
   updatedAt?: Date;
   /** Cuenta eliminada: no se muestra, pero su historial se conserva en la evolución */
   archived?: boolean;
+  /** Cuenta con subcuentas: no tiene saldo propio, su saldo es la suma de sus subcuentas */
+  isGroup?: boolean;
+  /** Subcuenta: id de la cuenta con subcuentas a la que pertenece */
+  parentId?: string | null;
 }
 
 /** Cómo se introdujo un registro */
@@ -71,6 +75,8 @@ export interface UserDoc {
   entriesMigrated?: boolean;
   /** Minutos fuera de la app antes de volver a pedir el código (0 = siempre) */
   lockAfter?: number;
+  /** Ya se agruparon automáticamente las cuentas de Revolut como subcuentas (1.9.0) */
+  autoGroupDone?: boolean;
 }
 
 export interface SnapshotAccount {

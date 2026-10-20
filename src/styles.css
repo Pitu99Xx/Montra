@@ -1039,3 +1039,56 @@ input.input[type='time']::-webkit-date-and-time-value {
   margin: 0;
 }
 
+
+/* Subcuentas dentro de una cuenta */
+.group-block {
+  border-bottom: 1px solid var(--border);
+}
+
+.group-block:last-child {
+  border-bottom: none;
+}
+
+.group-block > .row {
+  border-bottom: none;
+}
+
+.sub-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 8px 20px;
+  animation: fade 0.25s ease;
+}
+
+.sub-row.row {
+  position: relative;
+  border-bottom: none;
+  padding: 8px 0 8px 8px;
+  min-height: 48px;
+  gap: 12px;
+}
+
+/* Línea que une las subcuentas con su cuenta */
+.sub-row::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--border-strong);
+}
+
+.sub-row:last-child::before {
+  bottom: 50%;
+}
+
+.sub-row::after {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  width: 9px;
+  height: 1.5px;
+  background: var(--border-strong);
+}

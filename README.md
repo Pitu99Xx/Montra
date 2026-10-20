@@ -39,7 +39,8 @@ Cloud Messaging y Hosting.
 ```
 meta/owner                       { uid }                      propietaria única
 users/{uid}                      ajustes, PIN (hash PBKDF2), recordatorios
-users/{uid}/accounts/{id}        cuenta y saldo actual (archived: cuenta eliminada)
+users/{uid}/accounts/{id}        cuenta y saldo actual (archived: eliminada; isGroup: con
+                                 subcuentas, sin saldo propio; parentId: subcuenta de)
 users/{uid}/entries/{id}         registro: saldo de una cuenta en un momento, con su origen,
                                  nota, tipos de cambio de ese momento y batchId si viene de
                                  «Actualizar saldos»

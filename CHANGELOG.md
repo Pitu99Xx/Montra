@@ -2,6 +2,16 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.9.0 · 20 oct 2026
+
+- **Subcuentas.** Una cuenta puede contener subcuentas (por ejemplo, Revolut con Principal en EUR, Dólares en USD y Compartida en JPY). La cuenta no tiene saldo propio: su saldo es la suma de sus subcuentas, y cada subcuenta mantiene su divisa, color e historial.
+- En **Cuentas**, la cuenta con subcuentas se despliega con la flecha; al tocarla se abre su ficha.
+- **Ficha de la cuenta con subcuentas:** suma, barra de reparto por subcuenta, «Actualizar saldos» solo de esa cuenta, lista de subcuentas, «Añadir subcuenta» e historial conjunto.
+- **Nueva cuenta:** opción «Con subcuentas» y selector **«Dentro de»** para crear subcuentas o mover cuentas existentes dentro de otra desde su «Editar».
+- **Actualizar saldos** agrupa las subcuentas bajo su cuenta, con la suma en vivo.
+- **Evolución:** la cuenta con subcuentas es una línea más (la suma); al elegirla aparecen sus subcuentas para verlas por separado. En «Registros», filtrar por ella muestra los de todas sus subcuentas.
+- Tus cuentas de Revolut se agrupan automáticamente en una cuenta «Revolut» la primera vez que abres esta versión. El total y el historial no cambian.
+
 ## 1.8.1 · 20 oct 2026
 
 - Barra inferior unos 14 pt más baja, con una altura parecida a la de las apps nativas de iOS; los botones siguen por encima de la barra de inicio del iPhone.

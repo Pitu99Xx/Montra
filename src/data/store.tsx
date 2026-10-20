@@ -3,7 +3,7 @@ import { collection, doc, onSnapshot, orderBy, query, type Timestamp } from 'fir
 import { db } from '../firebase';
 import { convert } from '../lib/currency';
 import { computeTotalEUR } from './totals';
-import { migrateSnapshots, requestRatesRefresh } from './actions';
+import { autoGroupRevolut, migrateSnapshots, requestRatesRefresh } from './actions';
 import { buildSeries, type DayPoint } from './series';
 export { computeTotalEUR } from './totals';
 import { DEFAULT_USER, type Account, type Entry, type Rates, type UserDoc } from './model';
@@ -147,6 +147,17 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
     });
   }, [userLoaded, accountsLoaded, entriesLoaded, user.entriesMigrated, uid, allAccounts, rates]);
 
+  // Una sola vez (1.9.0): agrupar las cuentas de Revolut como subcuentas
+  const grouping = useRef(false);
+  useEffect(() => {
+    if (!userLoaded || !accountsLoaded || !user.entriesMigrated || user.autoGroupDone || grouping.current) return;
+    grouping.current = true;
+    autoGroupRevolut(uid, accounts).catch((e) => {
+      console.error('Agrupación de cuentas', e);
+      grouping.current = false;
+    });
+  }, [userLoaded, accountsLoaded, user.entriesMigrated, user.autoGroupDone, uid, accounts]);
+
   const series = useMemo(
     () => buildSeries(entries, allAccounts, user.baseCurrency, rates?.rates),
     [entries, allAccounts, user.baseCurrency, rates],
@@ -168,7 +179,7 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
       rates,
       totalEUR,
       missingRates: [
-        ...new Set(accounts.filter((a) => a.currency !== 'EUR' && !rates?.rates[a.currency]).map((a) => a.currency)),
+        ...new Set(accounts.filter((a) => !a.isGroup && a.currency !== 'EUR' && !rates?.rates[a.currency]).map((a) => a.currency)),
       ],
       total: totalEUR === null ? null : convert(totalEUR, 'EUR', base, rates),
       valueIn: (amount, from) => convert(amount, from, base, rates),

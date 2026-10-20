@@ -3,6 +3,7 @@ import { AccountIcon, toast } from '../components/ui';
 import { deleteEntries } from '../data/actions';
 import { SOURCE_LABEL, type Account, type Entry } from '../data/model';
 import { dayKey, groupEntries, previousEntry } from '../data/series';
+import { accountIdsFor, topLevel } from '../data/groups';
 import { useStore } from '../data/store';
 import { formatMoney } from '../lib/currency';
 import { SourceIcon, deltaOf } from './AccountDetail';
@@ -31,9 +32,9 @@ export function RecordsList({
   const groups = useMemo(
     () =>
       filter
-        ? groupEntries(entries.filter((e) => e.accountId === filter))
+        ? groupEntries(entries.filter((e) => accountIdsFor(accounts, filter).includes(e.accountId)))
         : groupEntries(entries.filter((e) => e.batchId)),
-    [entries, filter],
+    [entries, filter, accounts],
   );
   const totalsByDay = useMemo(() => new Map(series.map((p) => [p.day, p.total])), [series]);
 
@@ -79,7 +80,7 @@ export function RecordsList({
         >
           Todas las cuentas
         </button>
-        {accounts.map((a) => (
+        {topLevel(accounts).map((a) => (
           <button
             type="button"
             key={a.id}

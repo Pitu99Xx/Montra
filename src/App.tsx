@@ -11,6 +11,7 @@ import { lockOnReturn, lockOnStartup, markActive, markHidden, setGraceMinutes } 
 import { registerServiceWorker } from './lib/push';
 import { applyUpdate, useNewVersion } from './lib/update';
 import { AccountDetail } from './screens/AccountDetail';
+import { GroupDetail } from './screens/GroupDetail';
 import { AccountEditor } from './screens/AccountEditor';
 import { EntryEditor } from './screens/EntryEditor';
 import { AccountsScreen } from './screens/Accounts';
@@ -90,8 +91,8 @@ export function App() {
 type Tab = 'cuentas' | 'evolucion' | 'ajustes';
 const TABS: Tab[] = ['cuentas', 'evolucion', 'ajustes'];
 type SheetState =
-  | { kind: 'account'; account: Account | null }
-  | { kind: 'update' }
+  | { kind: 'account'; account: Account | null; parentId?: string }
+  | { kind: 'update'; groupId?: string }
   | { kind: 'currency' }
   | { kind: 'reminder'; reminder: Reminder | null }
   | { kind: 'entry'; entry: Entry | null; account: Account }
@@ -124,20 +125,23 @@ function Shell({ authUser }: { authUser: User }) {
   const [pendingUpdate, setPendingUpdate] = useState(() => wantsUpdate(location.href));
   const newVersion = useNewVersion();
   // Ficha de una cuenta abierta (entra desde la derecha)
-  const [detailId, setDetailId] = useState<string | null>(null);
-  const [detailClosing, setDetailClosing] = useState(false);
-  const detailAccount = detailId ? accounts.find((a) => a.id === detailId) : undefined;
+  // Fichas abiertas, apiladas (p. ej. Revolut → Dólares); al volver se cierra la de arriba
+  const [detailStack, setDetailStack] = useState<string[]>([]);
+  const [closingTop, setClosingTop] = useState(false);
+  const openDetail = useCallback((id: string) => setDetailStack((st) => [...st, id]), []);
   const closeDetail = useCallback(() => {
-    setDetailClosing(true);
+    setClosingTop(true);
     window.setTimeout(() => {
-      setDetailId(null);
-      setDetailClosing(false);
+      setDetailStack((st) => st.slice(0, -1));
+      setClosingTop(false);
     }, 240);
   }, []);
-  // Si la cuenta se elimina con la ficha abierta, se cierra
+  // Si una cuenta abierta deja de existir (eliminada), se quita de la pila
   useEffect(() => {
-    if (detailId && !detailAccount && !detailClosing) setDetailId(null);
-  }, [detailId, detailAccount, detailClosing]);
+    if (closingTop) return;
+    const alive = detailStack.filter((id) => accounts.some((a) => a.id === id));
+    if (alive.length !== detailStack.length) setDetailStack(alive);
+  }, [detailStack, accounts, closingTop]);
   // Dirección del deslizamiento al cambiar de pestaña (hacia la derecha o la izquierda)
   const [tabDir, setTabDir] = useState<'from-right' | 'from-left'>('from-right');
   const selectTab = useCallback(
@@ -253,7 +257,7 @@ function Shell({ authUser }: { authUser: User }) {
           {tab === 'cuentas' && (
             <AccountsScreen
               onCreate={() => setSheet({ kind: 'account', account: null })}
-              onOpen={(account) => setDetailId(account.id)}
+              onOpen={(account) => openDetail(account.id)}
               onEdit={(account) => setSheet({ kind: 'account', account })}
               onUpdateAll={() => setSheet({ kind: 'update' })}
             />
@@ -294,20 +298,39 @@ function Shell({ authUser }: { authUser: User }) {
         </div>
       </nav>
 
-      {detailAccount && (
-        <AccountDetail
-          account={detailAccount}
-          closing={detailClosing}
-          onBack={closeDetail}
-          onEditAccount={() => setSheet({ kind: 'account', account: detailAccount })}
-          onEditEntry={(entry) => setSheet({ kind: 'entry', entry, account: detailAccount })}
-          onAddEntry={() => setSheet({ kind: 'entry', entry: null, account: detailAccount })}
-        />
-      )}
+      {detailStack.map((id, i) => {
+        const acc = accounts.find((a) => a.id === id);
+        if (!acc) return null;
+        const closing = closingTop && i === detailStack.length - 1;
+        return acc.isGroup ? (
+          <GroupDetail
+            key={`${id}-${i}`}
+            group={acc}
+            closing={closing}
+            onBack={closeDetail}
+            onEditGroup={() => setSheet({ kind: 'account', account: acc })}
+            onOpenChild={(c) => openDetail(c.id)}
+            onAddChild={() => setSheet({ kind: 'account', account: null, parentId: acc.id })}
+            onUpdateGroup={() => setSheet({ kind: 'update', groupId: acc.id })}
+            onEditEntry={(entry, account) => setSheet({ kind: 'entry', entry, account })}
+          />
+        ) : (
+          <AccountDetail
+            key={`${id}-${i}`}
+            account={acc}
+            closing={closing}
+            backLabel={i > 0 ? accounts.find((a) => a.id === detailStack[i - 1])?.name : undefined}
+            onBack={closeDetail}
+            onEditAccount={() => setSheet({ kind: 'account', account: acc })}
+            onEditEntry={(entry) => setSheet({ kind: 'entry', entry, account: acc })}
+            onAddEntry={() => setSheet({ kind: 'entry', entry: null, account: acc })}
+          />
+        );
+      })}
 
-      {sheet?.kind === 'account' && <AccountEditor account={sheet.account} onClose={close} />}
+      {sheet?.kind === 'account' && <AccountEditor account={sheet.account} parentId={sheet.parentId} onClose={close} />}
       {sheet?.kind === 'entry' && <EntryEditor entry={sheet.entry} account={sheet.account} onClose={close} />}
-      {sheet?.kind === 'update' && <UpdateBalances onClose={close} />}
+      {sheet?.kind === 'update' && <UpdateBalances groupId={sheet.groupId} onClose={close} />}
       {sheet?.kind === 'reminder' && <ReminderEditor reminder={sheet.reminder} onClose={close} />}
       {sheet?.kind === 'currency' && (
         <CurrencyPicker

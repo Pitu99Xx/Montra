@@ -4,6 +4,7 @@ import { useStore } from '../data/store';
 import { formatMoney } from '../lib/currency';
 import type { Account, Entry } from '../data/model';
 import { RecordsList } from './RecordsList';
+import { childrenOf, topLevel } from '../data/groups';
 
 const RANGES = [
   { id: '1S', days: 7 },
@@ -142,10 +143,12 @@ export function EvolutionScreen({ onEditEntry }: { onEditEntry: (entry: Entry, a
   // Si solo se eligen cuentas de una misma divisa extranjera (sin el total), se ven en su propia divisa
   const selectedAccounts = accounts.filter((a) => sel.includes(a.id));
   const showTotal = sel.includes('total');
-  const currencies = [...new Set(selectedAccounts.map((a) => a.currency))];
+  // Divisas de cada línea elegida (una cuenta con subcuentas aporta las de sus subcuentas)
+  const lineCurrencies = (a: Account) => (a.isGroup ? childrenOf(accounts, a.id).map((c) => c.currency) : [a.currency]);
+  const currencies = [...new Set(selectedAccounts.flatMap(lineCurrencies))];
   const native = !showTotal && currencies.length === 1 && currencies[0] !== base;
   const unit = native ? currencies[0] : base;
-  const mixesCurrencies = !native && selectedAccounts.some((a) => a.currency !== base);
+  const mixesCurrencies = !native && selectedAccounts.some((a) => lineCurrencies(a).some((c) => c !== base));
 
   // El eje X abarca siempre el periodo completo; «Todo» va del primer registro a hoy (mínimo un mes)
   const [start, end] = useMemo(() => {
@@ -165,10 +168,22 @@ export function EvolutionScreen({ onEditEntry }: { onEditEntry: (entry: Entry, a
         const row: Record<string, number | null | string> = { t: p.t, day: p.day, total: p.total };
         let sum: number | null = null;
         for (const a of selectedAccounts) {
-          const v = p.accounts[a.id];
-          const value = v ? (native ? v.native : v.base) : null;
+          let value: number | null = null;
+          if (a.isGroup) {
+            // Línea de la cuenta con subcuentas: suma de sus subcuentas ese día
+            for (const c of childrenOf(accounts, a.id)) {
+              const v = p.accounts[c.id];
+              const x = v ? (native ? v.native : v.base) : null;
+              if (x !== null) value = (value ?? 0) + x;
+            }
+          } else {
+            const v = p.accounts[a.id];
+            value = v ? (native ? v.native : v.base) : null;
+          }
           row[`a_${a.id}`] = value;
-          if (value !== null) sum = (sum ?? 0) + value;
+          // Si también está elegida su cuenta, la subcuenta ya va dentro de esa suma
+          const inSelectedGroup = !!a.parentId && sel.includes(a.parentId);
+          if (value !== null && !inSelectedGroup) sum = (sum ?? 0) + value;
         }
         // Lo que muestra la cifra grande: el total o, sin él, la suma de las cuentas elegidas
         row.headline = showTotal || selectedAccounts.length === 0 ? p.total : sum;
@@ -320,18 +335,26 @@ export function EvolutionScreen({ onEditEntry }: { onEditEntry: (entry: Entry, a
               <span className="dot" style={{ background: 'var(--gold)' }} />
               Total
             </button>
-            {accounts.map((a) => (
-              <button
-                type="button"
-                key={a.id}
-                className="chip round"
-                aria-pressed={sel.includes(a.id)}
-                onClick={() => toggle(a.id)}
-              >
-                <span className="dot" style={{ background: a.color }} />
-                {a.name}
-              </button>
-            ))}
+            {topLevel(accounts).flatMap((a) => {
+              const chip = (x: Account, sub = false) => (
+                <button
+                  type="button"
+                  key={x.id}
+                  className="chip round"
+                  aria-pressed={sel.includes(x.id)}
+                  onClick={() => toggle(x.id)}
+                  style={sub ? { minHeight: 34, fontSize: 13, paddingLeft: 10 } : undefined}
+                >
+                  <span className="dot" style={{ background: x.color }} />
+                  {sub ? `↳ ${x.name}` : x.name}
+                </button>
+              );
+              // Al elegir una cuenta con subcuentas aparecen sus subcuentas para verlas por separado
+              // (y siempre las que ya estén elegidas, para poder quitarlas)
+              if (!a.isGroup) return [chip(a)];
+              const kids = childrenOf(accounts, a.id).filter((c) => sel.includes(a.id) || sel.includes(c.id));
+              return [chip(a), ...kids.map((c) => chip(c, true))];
+            })}
           </div>
 
           <RecordsList onSelectDay={setSelectedDay} onEditEntry={onEditEntry} />

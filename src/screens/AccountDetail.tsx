@@ -83,6 +83,7 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
 export function AccountDetail({
   account,
   closing,
+  backLabel,
   onBack,
   onEditAccount,
   onEditEntry,
@@ -90,6 +91,8 @@ export function AccountDetail({
 }: {
   account: Account;
   closing: boolean;
+  /** Texto del botón de volver (por defecto «Cuentas»; en una subcuenta, su cuenta) */
+  backLabel?: string;
   onBack: () => void;
   onEditAccount: () => void;
   onEditEntry: (e: Entry) => void;
@@ -151,7 +154,7 @@ export function AccountDetail({
             onClick={onBack}
             style={{ display: 'flex', alignItems: 'center', gap: 2 }}
           >
-            <IconBack size={22} /> Cuentas
+            <IconBack size={22} /> {backLabel ?? 'Cuentas'}
           </button>
           <button type="button" className="link-btn" onClick={onEditAccount}>
             Editar

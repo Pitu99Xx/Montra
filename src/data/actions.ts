@@ -78,7 +78,8 @@ export async function saveAccount(uid: string, account: Account, all: Account[],
   const prev = all.find((a) => a.id === saved.id);
   const batch = writeBatch(db);
   batch.set(ref, accountData(saved));
-  if (isNew || !prev || prev.balance !== saved.balance || prev.currency !== saved.currency) {
+  // Las cuentas con subcuentas no tienen saldo propio: nunca generan registros
+  if (!saved.isGroup && (isNew || !prev || prev.balance !== saved.balance || prev.currency !== saved.currency)) {
     addEntry(
       batch,
       uid,
@@ -93,11 +94,61 @@ export async function saveAccount(uid: string, account: Account, all: Account[],
  * Elimina una cuenta sin reescribir el pasado: queda archivada con un registro final a 0,
  * así la evolución anterior no cambia y el total deja de contarla desde hoy.
  */
-export async function deleteAccount(uid: string, account: Account, rates: Rates | null) {
+export async function deleteAccount(uid: string, account: Account, rates: Rates | null, all: Account[] = []) {
   const batch = writeBatch(db);
   batch.update(doc(db, 'users', uid, 'accounts', account.id), { archived: true, updatedAt: serverTimestamp() });
-  addEntry(batch, uid, { accountId: account.id, balance: 0, currency: account.currency, source: 'closed' }, rates);
+  if (account.isGroup) {
+    // Al quitar una cuenta con subcuentas, sus subcuentas pasan a ser independientes
+    for (const c of all.filter((a) => a.parentId === account.id)) {
+      batch.update(doc(db, 'users', uid, 'accounts', c.id), { parentId: null });
+    }
+  } else {
+    addEntry(batch, uid, { accountId: account.id, balance: 0, currency: account.currency, source: 'closed' }, rates);
+  }
   await batch.commit();
+}
+
+/**
+ * Una sola vez (1.9.0): las cuentas cuyo nombre incluye «Revolut» pasan a ser subcuentas de una
+ * cuenta «Revolut». Se les quita del nombre lo que ya dice la cuenta principal.
+ */
+export async function autoGroupRevolut(uid: string, accounts: Account[]) {
+  const candidates = accounts.filter((a) => !a.isGroup && !a.parentId && /revolut/i.test(a.name));
+  if (candidates.length >= 2 && !accounts.some((a) => a.isGroup && /^revolut$/i.test(a.name.trim()))) {
+    const batch = writeBatch(db);
+    const groupRef = doc(accountsCol(uid));
+    const first = Math.min(...candidates.map((a) => a.order));
+    batch.set(groupRef, {
+      name: 'Revolut',
+      type: 'otra',
+      kind: 'asset',
+      currency: 'EUR',
+      color: '#E8D5A8',
+      balance: 0,
+      includeInTotal: true,
+      order: first,
+      isGroup: true,
+      updatedAt: serverTimestamp(),
+    });
+    const fallback: Record<string, string> = {
+      EUR: 'Principal',
+      USD: 'Dólares',
+      JPY: 'Yenes',
+      GBP: 'Libras',
+      CNY: 'Yuanes',
+    };
+    for (const a of candidates) {
+      const short = a.name
+        .replace(/revolut|cuenta/gi, '')
+        .replace(/\([^)]*\)/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const name = short ? short.charAt(0).toUpperCase() + short.slice(1) : (fallback[a.currency] ?? a.currency);
+      batch.update(doc(db, 'users', uid, 'accounts', a.id), { parentId: groupRef.id, name });
+    }
+    await batch.commit();
+  }
+  await saveUser(uid, { autoGroupDone: true });
 }
 
 export async function reorderAccounts(uid: string, ordered: Account[]) {

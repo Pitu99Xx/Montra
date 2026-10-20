@@ -60,6 +60,43 @@ export function useSheetExit(onClose: () => void) {
   return { closing, close };
 }
 
+/** Icono de una cuenta con subcuentas: dos tarjetas apiladas con la inicial. */
+export function GroupIcon({ name, color, back, size = 42 }: { name: string; color: string; back?: string; size?: number }) {
+  const tile = size * 0.86;
+  const off = size - tile;
+  return (
+    <span style={{ position: 'relative', width: size, height: size, flexShrink: 0 }} aria-hidden="true">
+      <span
+        style={{
+          position: 'absolute',
+          left: off,
+          top: 0,
+          width: tile,
+          height: tile,
+          borderRadius: tile * 0.3,
+          background: back ?? color,
+          opacity: 0.5,
+        }}
+      />
+      <span
+        className="acc-icon"
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: off,
+          width: tile,
+          height: tile,
+          borderRadius: tile * 0.3,
+          background: color,
+          fontSize: tile * 0.42,
+        }}
+      >
+        {name.trim().charAt(0).toUpperCase()}
+      </span>
+    </span>
+  );
+}
+
 export function Sheet({
   title,
   onClose,

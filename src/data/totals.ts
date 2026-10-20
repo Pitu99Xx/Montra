@@ -5,7 +5,7 @@ import type { Account, Rates } from './model';
 export function computeTotalEUR(accounts: Account[], rates: Rates | null): number | null {
   let sum = 0;
   for (const a of accounts) {
-    if (!a.includeInTotal) continue;
+    if (!a.includeInTotal || a.isGroup) continue;
     const v = toEUR(a.balance, a.currency, rates);
     if (v === null) return null;
     sum += a.kind === 'liability' ? -Math.abs(v) : v;
