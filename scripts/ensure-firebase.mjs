@@ -25,6 +25,8 @@ const APIS = [
   'storage.googleapis.com',
   'iam.googleapis.com',
   'cloudresourcemanager.googleapis.com',
+  'cloudbilling.googleapis.com', // Firebase comprueba el plan Blaze antes de desplegar funciones
+  'firebaseextensions.googleapis.com',
 ];
 
 const auth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform', 'https://www.googleapis.com/auth/firebase'] });
@@ -128,10 +130,17 @@ let gestion = false;
   const r = await api('POST', `${rm}:getIamPolicy`, { options: { requestedPolicyVersion: 3 } });
   if (r.status === 200) {
     const policy = r.data;
-    const member = `serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com`;
-    const roles = ['roles/cloudbuild.builds.builder'];
+    const compute = `serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com`;
+    const pubsub = `serviceAccount:service-${PROJECT_NUMBER}@gcp-sa-pubsub.iam.gserviceaccount.com`;
+    // Los que pide Cloud Functions (2.ª gen.) para compilar y para los disparadores programados y de Firestore
+    const grants = [
+      [compute, 'roles/cloudbuild.builds.builder'],
+      [compute, 'roles/run.invoker'],
+      [compute, 'roles/eventarc.eventReceiver'],
+      [pubsub, 'roles/iam.serviceAccountTokenCreator'],
+    ];
     let changed = false;
-    for (const role of roles) {
+    for (const [member, role] of grants) {
       let b = policy.bindings.find((x) => x.role === role && !x.condition);
       if (!b) policy.bindings.push((b = { role, members: [] }));
       if (!b.members.includes(member)) {
@@ -141,9 +150,9 @@ let gestion = false;
     }
     if (changed) {
       const s = await api('POST', `${rm}:setIamPolicy`, { policy });
-      if (s.status === 200) ok('Permisos de compilación de Cloud Functions concedidos');
-      else warn(`No se pudieron conceder permisos de compilación (HTTP ${s.status})`);
-    }
+      if (s.status === 200) ok('Permisos de Cloud Functions concedidos');
+      else warn(`No se pudieron conceder permisos a Cloud Functions (HTTP ${s.status})`);
+    } else ok('Permisos de Cloud Functions correctos');
   } else warn(`No se pudo leer la política IAM (HTTP ${r.status})`);
 }
 

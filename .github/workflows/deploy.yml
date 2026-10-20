@@ -45,16 +45,23 @@ jobs:
         id: ensure
         run: node scripts/ensure-firebase.mjs
 
-      - name: Desplegar reglas, funciones y web
+      - name: Desplegar web y reglas de Firestore
         run: |
-          # El primer despliegue de funciones puede fallar mientras Google propaga permisos de Eventarc
-          for attempt in 1 2 3; do
+          npx --yes firebase-tools@14 deploy \
+            --project montra-832b1 \
+            --only "firestore,${{ steps.ensure.outputs.hosting }}" \
+            --force --non-interactive
+
+      - name: Desplegar Cloud Functions
+        run: |
+          # La primera vez Google tarda unos minutos en propagar APIs y permisos recién activados
+          for attempt in 1 2 3 4; do
             npx --yes firebase-tools@14 deploy \
               --project montra-832b1 \
-              --only "firestore,functions,${{ steps.ensure.outputs.hosting }}" \
+              --only functions \
               --force --non-interactive && exit 0
-            echo "Intento $attempt fallido; reintentando en 90 s…"
-            sleep 90
+            echo "Intento $attempt fallido; reintentando en 120 s…"
+            sleep 120
           done
           exit 1
 
