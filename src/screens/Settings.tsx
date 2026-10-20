@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { signOut, type User } from 'firebase/auth';
 import { auth } from '../firebase';
+import { Logo } from '../components/Logo';
 import { Switch, toast } from '../components/ui';
 import { IconBell, IconChevron, IconPlus } from '../components/Icons';
 import type { Reminder, ThemePref } from '../data/model';
@@ -199,9 +200,21 @@ export function SettingsScreen({
       >
         Cerrar sesión
       </button>
-      <p className="hint" style={{ textAlign: 'center' }}>
-        Montra · versión {__APP_VERSION__}
-      </p>
+      <footer style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 0 4px' }}>
+        <Logo size={36} tile={false} />
+        <span style={{ fontWeight: 600, fontSize: 14 }}>Montra · versión {__APP_VERSION__}</span>
+        <span className="row-sub">
+          Actualizada el{' '}
+          {new Date(__APP_BUILD_DATE__).toLocaleString('es-ES', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}{' '}
+          · {__APP_COMMIT__}
+        </span>
+      </footer>
     </main>
   );
 }

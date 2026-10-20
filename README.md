@@ -30,6 +30,7 @@ Cloud Messaging y Hosting.
 | `firestore.rules` | Reglas: solo la propietaria puede leer y escribir |
 | `scripts/ensure-firebase.mjs` | Prepara el proyecto antes de desplegar (APIs, Firestore, sitio de Hosting, dominios) |
 | `scripts/make-icons.mjs` | Genera el logo y los iconos de la PWA |
+| `CHANGELOG.md` | Historial de versiones (la versión se ve al final de Ajustes) |
 | `.github/workflows/` | `deploy.yml` despliega todo; `ci.yml` compila en cada push |
 
 ## Datos (Firestore)
