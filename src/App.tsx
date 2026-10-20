@@ -2,7 +2,9 @@ import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { getRedirectResult, onAuthStateChanged, signOut, type User } from 'firebase/auth';
 import { auth } from './firebase';
 import { ToastHost, Spinner } from './components/ui';
-import { IconChart, IconGear, IconWallet } from './components/Icons';
+import { IconChart, IconGear, IconGrid, IconWallet } from './components/Icons';
+import { Sidebar } from './components/Sidebar';
+import { DESKTOP_QUERY, useMedia } from './lib/useMedia';
 import { claimOrCheckOwner, saveUser, type OwnerState } from './data/actions';
 import type { Account, Entry, Reminder, ThemePref } from './data/model';
 import { StoreProvider, useStore } from './data/store';
@@ -25,6 +27,7 @@ import { UpdateBalances } from './screens/UpdateBalances';
 
 // La gráfica (Recharts) se carga solo al abrir «Evolución»
 const EvolutionScreen = lazy(() => import('./screens/Evolution').then((m) => ({ default: m.EvolutionScreen })));
+const SummaryScreen = lazy(() => import('./screens/Summary').then((m) => ({ default: m.SummaryScreen })));
 
 const THEME_KEY = 'montra.theme';
 
@@ -88,8 +91,9 @@ export function App() {
   );
 }
 
-type Tab = 'cuentas' | 'evolucion' | 'ajustes';
-const TABS: Tab[] = ['cuentas', 'evolucion', 'ajustes'];
+// «Resumen» solo existe en la versión de ordenador
+type Tab = 'resumen' | 'cuentas' | 'evolucion' | 'ajustes';
+const TABS: Tab[] = ['resumen', 'cuentas', 'evolucion', 'ajustes'];
 type SheetState =
   | { kind: 'account'; account: Account | null; parentId?: string }
   | { kind: 'update'; groupId?: string }
@@ -119,7 +123,9 @@ function Shell({ authUser }: { authUser: User }) {
   // Se mantiene la pantalla de alta del PIN hasta que termine (incluido el paso de Face ID),
   // aunque el PIN ya se haya guardado y llegue por la suscripción a Firestore.
   const [inSetup, setInSetup] = useState(false);
-  const [tab, setTab] = useState<Tab>('cuentas');
+  const isDesktop = useMedia(DESKTOP_QUERY);
+  const [tabState, setTab] = useState<Tab>(() => (window.matchMedia(DESKTOP_QUERY).matches ? 'resumen' : 'cuentas'));
+  const tab: Tab = !isDesktop && tabState === 'resumen' ? 'cuentas' : tabState;
   const [sheet, setSheet] = useState<SheetState>(null);
   const [changingPin, setChangingPin] = useState(false);
   const [pendingUpdate, setPendingUpdate] = useState(() => wantsUpdate(location.href));
@@ -251,9 +257,32 @@ function Shell({ authUser }: { authUser: User }) {
   const close = () => setSheet(null);
 
   return (
-    <div className="app">
+    <div className={`app${isDesktop ? ' desk' : ''}`}>
+      {isDesktop && (
+        <Sidebar
+          authUser={authUser}
+          current={tab}
+          onSelect={selectTab}
+          items={[
+            { id: 'resumen', label: 'Resumen', icon: <IconGrid size={20} /> },
+            { id: 'cuentas', label: 'Cuentas', icon: <IconWallet size={20} /> },
+            { id: 'evolucion', label: 'Evolución', icon: <IconChart size={20} /> },
+            { id: 'ajustes', label: 'Ajustes', icon: <IconGear size={20} /> },
+          ]}
+        />
+      )}
       <div className="app-scroll">
         <div key={tab} className={`tab-view ${tabDir}`}>
+          {tab === 'resumen' && (
+            <Suspense fallback={<Splash />}>
+              <SummaryScreen
+                onOpen={(account) => openDetail(account.id)}
+                onCreate={() => setSheet({ kind: 'account', account: null })}
+                onUpdateAll={() => setSheet({ kind: 'update' })}
+                onEditEntry={(entry, account) => setSheet({ kind: 'entry', entry, account })}
+              />
+            </Suspense>
+          )}
           {tab === 'cuentas' && (
             <AccountsScreen
               onCreate={() => setSheet({ kind: 'account', account: null })}
@@ -290,13 +319,15 @@ function Shell({ authUser }: { authUser: User }) {
         </div>
       )}
 
-      <nav className="tabbar" aria-label="Secciones">
-        <div className="tabbar-inner">
-          <TabButton id="cuentas" tab={tab} setTab={selectTab} label="Cuentas" icon={<IconWallet />} />
-          <TabButton id="evolucion" tab={tab} setTab={selectTab} label="Evolución" icon={<IconChart />} />
-          <TabButton id="ajustes" tab={tab} setTab={selectTab} label="Ajustes" icon={<IconGear />} />
-        </div>
-      </nav>
+      {!isDesktop && (
+        <nav className="tabbar" aria-label="Secciones">
+          <div className="tabbar-inner">
+            <TabButton id="cuentas" tab={tab} setTab={selectTab} label="Cuentas" icon={<IconWallet />} />
+            <TabButton id="evolucion" tab={tab} setTab={selectTab} label="Evolución" icon={<IconChart />} />
+            <TabButton id="ajustes" tab={tab} setTab={selectTab} label="Ajustes" icon={<IconGear />} />
+          </div>
+        </nav>
+      )}
 
       {detailStack.map((id, i) => {
         const acc = accounts.find((a) => a.id === id);

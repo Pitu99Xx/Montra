@@ -31,6 +31,8 @@ interface Store {
 }
 
 const Ctx = createContext<Store | null>(null);
+/** Solo para pruebas visuales: permite montar pantallas con datos de ejemplo */
+export const StoreContext = Ctx;
 
 const tsToDate = (v: unknown): Date | undefined =>
   v && typeof (v as Timestamp).toDate === 'function' ? (v as Timestamp).toDate() : undefined;

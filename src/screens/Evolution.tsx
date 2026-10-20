@@ -123,7 +123,14 @@ function ChartTooltip({ active, payload, label, base }: TipProps) {
   );
 }
 
-export function EvolutionScreen({ onEditEntry }: { onEditEntry: (entry: Entry, account: Account) => void }) {
+export function EvolutionScreen({
+  onEditEntry,
+  embedded = false,
+}: {
+  onEditEntry: (entry: Entry, account: Account) => void;
+  /** Panel dentro del Resumen de ordenador: sin título grande ni lista de registros */
+  embedded?: boolean;
+}) {
   const { series, accounts, user } = useStore();
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const base = user.baseCurrency;
@@ -200,10 +207,14 @@ export function EvolutionScreen({ onEditEntry }: { onEditEntry: (entry: Entry, a
   const pct = change !== null && first ? (change / Math.abs(first)) * 100 : null;
 
   return (
-    <main className="screen">
-      <header className="screen-header">
-        <h1 className="screen-title">Evolución</h1>
-      </header>
+    <main className={embedded ? 'evo-embedded' : 'screen'}>
+      {embedded ? (
+        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Evolución</h2>
+      ) : (
+        <header className="screen-header">
+          <h1 className="screen-title">Evolución</h1>
+        </header>
+      )}
 
       <div className="segmented" role="group" aria-label="Periodo">
         {RANGES.map((r) => (
@@ -357,7 +368,7 @@ export function EvolutionScreen({ onEditEntry }: { onEditEntry: (entry: Entry, a
             })}
           </div>
 
-          <RecordsList onSelectDay={setSelectedDay} onEditEntry={onEditEntry} />
+          {!embedded && <RecordsList onSelectDay={setSelectedDay} onEditEntry={onEditEntry} />}
         </>
       )}
     </main>

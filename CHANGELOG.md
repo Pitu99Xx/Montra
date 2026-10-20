@@ -2,6 +2,15 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.10.0 · 20 oct 2026
+
+- **Versión para ordenador.** Con la ventana ancha (desde 1024 px) Montra cambia sola de diseño:
+  - Barra lateral con Resumen, Cuentas, Evolución y Ajustes, el próximo recordatorio y tu usuario con la versión.
+  - **Resumen** (nueva, solo en ordenador): total con su variación, variación de los últimos 6 meses, porcentaje en otras divisas, gráfica de evolución, cuentas con su peso en el total (incluidas las subcuentas) y las últimas actualizaciones.
+  - Las hojas se abren como ventanas centradas y las fichas de cuenta como un panel lateral a la derecha.
+  - Efectos al pasar el ratón sobre lo que se puede pulsar.
+- En el móvil todo sigue igual.
+
 ## 1.9.1 · 20 oct 2026
 
 - Corregido: en las hojas largas (como «Editar cuenta») los botones de abajo ya no se aplastan; si el contenido no cabe, la hoja se desplaza.
