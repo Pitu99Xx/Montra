@@ -2,6 +2,10 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.13.2 · 20 oct 2026
+
+- Ordenador: las filas de cuentas de la gráfica del Resumen y de los filtros de Registros ya no muestran barra de desplazamiento. Se siguen moviendo igual con el panel táctil y, ahora también, con la rueda del ratón.
+
 ## 1.13.1 · 20 oct 2026
 
 - Fechas de proyectos y movimientos en formato cerrado, con desplegables: Día / Mes / Año si es exacta y Mes / Año si es aproximada (antes, en algunos navegadores, el mes se escribía como texto). El día se ajusta al mes elegido (por ejemplo, febrero llega hasta el 28 o el 29).

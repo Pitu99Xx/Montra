@@ -5,6 +5,7 @@ import { formatMoney } from '../lib/currency';
 import type { Account, Entry } from '../data/model';
 import { RecordsList } from './RecordsList';
 import { childrenOf, topLevel } from '../data/groups';
+import { useHorizontalWheel } from '../lib/useHorizontalWheel';
 
 const RANGES = [
   { id: '1S', days: 7 },
@@ -136,6 +137,7 @@ export function EvolutionScreen({
   const base = user.baseCurrency;
   const [range, setRange] = useState<RangeId>('6M');
   const [sel, setSel] = useState<string[]>(loadSel);
+  const chipsRef = useHorizontalWheel<HTMLDivElement>();
 
   const toggle = (id: string) => {
     const next = sel.includes(id) ? sel.filter((s) => s !== id) : [...sel, id];
@@ -336,7 +338,7 @@ export function EvolutionScreen({
           </p>
 
           <span className="eyebrow">Mostrar en la gráfica</span>
-          <div className={embedded ? 'chips scroll-x' : 'chips'}>
+          <div ref={chipsRef} className={embedded ? 'chips scroll-x' : 'chips'}>
             <button
               type="button"
               className="chip round"

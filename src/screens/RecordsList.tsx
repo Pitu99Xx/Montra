@@ -8,6 +8,7 @@ import { useStore } from '../data/store';
 import { formatMoney } from '../lib/currency';
 import { SourceIcon, deltaOf } from './AccountDetail';
 import { DESKTOP_QUERY, useMedia } from '../lib/useMedia';
+import { useHorizontalWheel } from '../lib/useHorizontalWheel';
 
 const PAGE = 8;
 const groupDate = (d: Date) =>
@@ -28,6 +29,7 @@ export function RecordsList({
   const byId = useMemo(() => new Map(allAccounts.map((a) => [a.id, a])), [allAccounts]);
   const base = user.baseCurrency;
   const isDesktop = useMedia(DESKTOP_QUERY);
+  const chipsRef = useHorizontalWheel<HTMLDivElement>();
 
   // «Todas las cuentas»: solo las actualizaciones de saldos (ya incluyen todas las cuentas).
   // Con una cuenta elegida: todos sus registros, también los sueltos (saldo inicial, ediciones…).
@@ -83,7 +85,7 @@ export function RecordsList({
         <span className="eyebrow">Registros</span>
         <span className="row-sub">{filter ? 'Toca un registro para corregirlo' : 'Toca una actualización'}</span>
       </div>
-      <div className="chips" style={{ flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: 2 }}>
+      <div ref={chipsRef} className="chips scroll-x">
         <button
           type="button"
           className="chip round"

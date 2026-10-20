@@ -1643,12 +1643,17 @@ input.input[type='time']::-webkit-date-and-time-value {
   padding-right: 4px;
 }
 
-/* Chips de la gráfica en una sola fila desplazable (la gráfica no crece hacia abajo) */
+/* Chips en una sola fila desplazable (la gráfica no crece hacia abajo), sin barra visible:
+   se mueve con el panel táctil, la rueda del ratón o arrastrando en el móvil */
 .chips.scroll-x {
   flex-wrap: nowrap;
   overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: thin;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.chips.scroll-x::-webkit-scrollbar {
+  display: none;
 }
 
 .chips.scroll-x > .chip {
