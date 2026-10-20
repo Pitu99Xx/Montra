@@ -1401,3 +1401,30 @@ input.input[type='time']::-webkit-date-and-time-value {
     padding-top: 72px;
   }
 }
+
+/* Ordenador: fondo desenfocado detrás de las fichas laterales y de las ventanas */
+.detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 14;
+  background: rgba(3, 8, 18, 0.38);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  animation: fade 0.25s ease;
+}
+
+:root[data-theme='light'] .detail-backdrop {
+  background: rgba(11, 27, 51, 0.18);
+}
+
+.detail-backdrop.closing {
+  animation: fade-out 0.24s ease-in forwards;
+}
+
+@media (min-width: 1024px) {
+  .sheet-backdrop {
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+}

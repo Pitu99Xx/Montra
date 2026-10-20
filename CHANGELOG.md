@@ -2,6 +2,11 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.10.2 · 20 oct 2026
+
+- Ordenador: al abrir una ficha por la derecha (una cuenta, Revolut, una subcuenta…) el resto de la página se desenfoca; al pulsar en esa zona, o con la tecla Esc, se vuelve atrás.
+- Las ventanas centradas (editar cuenta, actualizar saldos, registros…) también desenfocan el fondo.
+
 ## 1.10.1 · 20 oct 2026
 
 - Inicio de sesión rediseñado para ordenador: la marca, el lema y lo que hace Montra a la izquierda, y una tarjeta de acceso con Google a la derecha.

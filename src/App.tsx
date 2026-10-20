@@ -142,6 +142,16 @@ function Shell({ authUser }: { authUser: User }) {
       setClosingTop(false);
     }, 240);
   }, []);
+  // Esc cierra la ficha de arriba (si no hay una hoja abierta encima)
+  useEffect(() => {
+    if (!detailStack.length) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !document.querySelector('.sheet-backdrop')) closeDetail();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [detailStack.length, closeDetail]);
+
   // Si una cuenta abierta deja de existir (eliminada), se quita de la pila
   useEffect(() => {
     if (closingTop) return;
@@ -327,6 +337,15 @@ function Shell({ authUser }: { authUser: User }) {
             <TabButton id="ajustes" tab={tab} setTab={selectTab} label="Ajustes" icon={<IconGear />} />
           </div>
         </nav>
+      )}
+
+      {/* Ordenador: el resto de la página se desenfoca; al pulsarlo se vuelve atrás */}
+      {isDesktop && detailStack.length > 0 && (
+        <div
+          className={`detail-backdrop${closingTop && detailStack.length === 1 ? ' closing' : ''}`}
+          onClick={closeDetail}
+          aria-hidden="true"
+        />
       )}
 
       {detailStack.map((id, i) => {
