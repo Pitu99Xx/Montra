@@ -840,7 +840,17 @@ a {
     background-color 0.2s ease,
     color 0.2s ease,
     border-color 0.2s ease,
+    box-shadow 0.2s ease,
     opacity 0.2s ease;
+}
+
+/* Sombras laterales transparentes en reposo: al resaltar solo cambia el color, a la vez que el fondo */
+.list button.row,
+.rec-entries button.row,
+.list .group-block > .row {
+  box-shadow:
+    -200px 0 0 transparent,
+    200px 0 0 transparent;
 }
 
 .btn:active:not(:disabled),
@@ -869,7 +879,9 @@ button.row:active {
 }
 
 .list .group-block > .row > button.row:active {
-  box-shadow: none;
+  box-shadow:
+    -200px 0 0 transparent,
+    200px 0 0 transparent;
 }
 
 .tab:active {
@@ -1361,7 +1373,9 @@ input.input[type='time']::-webkit-date-and-time-value {
   }
 
   .list .group-block > .row > button.row:hover {
-    box-shadow: none;
+    box-shadow:
+    -200px 0 0 transparent,
+    200px 0 0 transparent;
     background-color: transparent;
   }
 

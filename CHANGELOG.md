@@ -2,6 +2,10 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.12.2 · 20 oct 2026
+
+- El resaltado de las filas aparece de una vez: antes, al pasar el ratón (por ejemplo, por los movimientos de un proyecto) se veía primero el rectángulo central y después los bordes hasta las esquinas redondeadas.
+
 ## 1.12.1 · 20 oct 2026
 
 - El resaltado al pasar el ratón o tocar una fila ocupa toda la casilla, hasta los bordes de la lista: cuentas, subcuentas (también la cuenta con subcuentas entera, con su flecha), Ajustes, Actualizar saldos, fichas de proyecto, selector de divisa y las cuentas de una actualización abierta en Registros.
