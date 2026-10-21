@@ -130,7 +130,8 @@ a {
 
 .num {
   font-family: 'Playfair Display', Georgia, serif;
-  font-variant-numeric: lining-nums tabular-nums;
+  /* Cifras propias de Playfair (las de los bocetos), que suben y bajan de la línea */
+  font-variant-numeric: oldstyle-nums proportional-nums;
 }
 
 .app {

@@ -2,6 +2,10 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.16.2 · 21 oct 2026
+
+- Los importes usan las cifras propias de Playfair Display, como en los bocetos (las que suben y bajan de la línea), en lugar de cifras de altura y ancho fijos.
+
 ## 1.16.1 · 21 oct 2026
 
 - Corregido: Face ID / Touch ID dejaba de funcionar cada cierto tiempo. Las llaves de acceso se sincronizan por el llavero de iCloud y todas usaban el mismo usuario, así que al activarlo en el Mac se sustituía la del iPhone (y al revés). Ahora cada dispositivo crea su propia llave («Montra · iPhone», «Montra · Mac») y no se pisan.
