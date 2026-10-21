@@ -110,7 +110,7 @@ export function Sheet({
   action?: ReactNode;
   children: ReactNode;
 }) {
-  useBottomBand('--surface');
+  useBottomBand('--bg');
   const backdropRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);

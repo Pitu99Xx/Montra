@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AccountIcon, GroupIcon } from '../components/ui';
-import { IconChevron, IconDown, IconPlus, IconUp } from '../components/Icons';
+import { IconChevron, IconDown, IconPlus, IconRefresh, IconUp } from '../components/Icons';
 import { childrenOf, currenciesOf, groupValue, topLevel } from '../data/groups';
 import type { Account } from '../data/model';
 import { reorderAccounts } from '../data/actions';
@@ -73,9 +73,15 @@ export function AccountsScreen({
     <main className="screen">
       <header className="screen-header">
         <h1 className="screen-title">Cuentas</h1>
-        <button type="button" className="icon-btn filled" aria-label="Añadir cuenta" onClick={onCreate}>
-          <IconPlus size={22} />
-        </button>
+        <span className="glass-group">
+          <button type="button" className="icon-btn" aria-label="Actualizar saldos" onClick={onUpdateAll}>
+            <IconRefresh size={20} />
+          </button>
+          <span className="sep" aria-hidden="true" />
+          <button type="button" className="icon-btn" aria-label="Añadir cuenta" onClick={onCreate}>
+            <IconPlus size={22} />
+          </button>
+        </span>
       </header>
 
       <section className="card total-card" aria-label="Total">

@@ -2,6 +2,18 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.15.0 · 21 oct 2026
+
+- Liquid Glass completo, como en el boceto:
+  - Fondo con una luz suave (dorado, azul y lavanda) para que el cristal se note.
+  - Tarjeta del total e indicadores del Resumen de cristal.
+  - Arriba a la derecha, los botones redondos van en un grupo de cristal; en Cuentas, junto a «+», está también «Actualizar saldos».
+  - Hojas (editar, actualizar saldos, movimientos…) flotantes y de cristal, separadas de los bordes y con la app desenfocada detrás; sus campos son más opacos para leerse bien.
+  - Selector de periodo de cristal, con el elegido marcado como una lente; la ventana de la gráfica también es de cristal.
+  - Mac: barra lateral de cristal flotante, separada del borde de la ventana.
+- Listas, gráficas y fichas siguen sobre paneles casi opacos, sin desenfoque, para que el desplazamiento siga fluido.
+- Con «Reducir transparencia» activado en el iPhone o el Mac, todo vuelve a colores sólidos.
+
 ## 1.14.0 · 21 oct 2026
 
 - Estilo Liquid Glass, solo en los botones y en la barra de pestañas: los botones tienen fondo translúcido con desenfoque y un reflejo en el borde superior; los botones dorados (o azul marino en el tema claro) llevan un brillo de cristal.

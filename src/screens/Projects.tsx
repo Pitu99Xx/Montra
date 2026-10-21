@@ -445,9 +445,11 @@ export function ProjectsScreen({
     <main className="screen">
       <header className="screen-header">
         <h1 className="screen-title">Proyectos</h1>
-        <button type="button" className="icon-btn filled" aria-label="Nuevo proyecto" onClick={onCreate}>
-          <IconPlus size={22} />
-        </button>
+        <span className="glass-group">
+          <button type="button" className="icon-btn" aria-label="Nuevo proyecto" onClick={onCreate}>
+            <IconPlus size={22} />
+          </button>
+        </span>
       </header>
       {projects.length === 0 ? (
         empty

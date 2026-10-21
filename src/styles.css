@@ -26,6 +26,12 @@
   --glass-hi: rgba(255, 255, 255, 0.34);
   --glass-lens: rgba(255, 255, 255, 0.13);
   --glass-shadow: rgba(0, 0, 0, 0.35);
+  --glass-sheet: rgba(18, 36, 64, 0.66);
+  --glass-field: rgba(7, 16, 31, 0.55);
+  --panel: rgba(16, 35, 63, 0.84);
+  --glow-1: rgba(201, 164, 92, 0.3);
+  --glow-2: rgba(156, 195, 245, 0.17);
+  --glow-3: rgba(185, 167, 242, 0.2);
   color-scheme: dark;
 }
 
@@ -55,6 +61,12 @@
   --glass-hi: rgba(255, 255, 255, 0.95);
   --glass-lens: rgba(11, 27, 51, 0.07);
   --glass-shadow: rgba(11, 27, 51, 0.14);
+  --glass-sheet: rgba(255, 255, 255, 0.74);
+  --glass-field: rgba(244, 241, 234, 0.8);
+  --panel: rgba(255, 255, 255, 0.86);
+  --glow-1: rgba(201, 164, 92, 0.22);
+  --glow-2: rgba(156, 195, 245, 0.22);
+  --glow-3: rgba(185, 167, 242, 0.16);
   color-scheme: light;
 }
 
@@ -1721,9 +1733,11 @@ input.input[type='time']::-webkit-date-and-time-value {
   cursor: pointer;
 }
 
-/* ── Liquid Glass: solo en los botones y en la barra de pestañas ──────────────
+/* ── Liquid Glass ──────────────────────────────────────────────────────────
    Cristal = fondo translúcido + desenfoque de lo que hay detrás + reflejo en el borde superior.
-   Las tarjetas, listas y gráficas siguen opacas: se leen mejor y el desplazamiento va fluido. */
+   Va en lo que flota o agrupa controles (botones, barra de pestañas, hojas, barra lateral,
+   indicadores, selector de periodo). Listas y gráficas quedan sobre paneles casi opacos, sin
+   desenfoque: se leen mejor y el desplazamiento va fluido. */
 .btn-outline,
 .btn-ghost,
 .btn-danger {
@@ -1812,5 +1826,216 @@ input.input[type='time']::-webkit-date-and-time-value {
 
   .tabbar {
     background: var(--nav);
+  }
+}
+
+/* Luz de fondo (fija y estática, no cuesta al desplazar): sin algo detrás, el cristal no se nota */
+.app::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(70vmax 60vmax at 92% -6%, var(--glow-1), transparent 60%),
+    radial-gradient(60vmax 55vmax at -12% 52%, var(--glow-2), transparent 62%),
+    radial-gradient(60vmax 55vmax at 96% 104%, var(--glow-3), transparent 60%);
+}
+
+.app-scroll {
+  position: relative;
+  z-index: 1;
+}
+
+/* Paneles casi opacos */
+.card,
+.list {
+  background: var(--panel);
+}
+
+/* Superficies de cristal */
+.total-card,
+.glass-group,
+.segmented,
+.chart-tooltip {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset 0 1px 0 var(--glass-hi),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    0 12px 32px var(--glass-shadow);
+}
+
+.total-card {
+  border-radius: 26px;
+}
+
+/* Grupo de botones redondos (arriba a la derecha) */
+.glass-group {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  border-radius: 25px;
+}
+
+.glass-group .icon-btn {
+  width: 40px;
+  height: 40px;
+  color: var(--gold-text);
+}
+
+.glass-group .sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 9px 0;
+  background: var(--glass-border);
+}
+
+/* Selector de periodo: el elegido es una lente de cristal */
+.segmented {
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 0 var(--glass-hi),
+    0 6px 18px var(--glass-shadow);
+}
+
+.segmented button {
+  border-radius: 12px;
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--glass-lens);
+  color: var(--gold-strong);
+  box-shadow:
+    inset 0 1px 0 var(--glass-hi),
+    0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* Ventana de la gráfica */
+.chart-tooltip {
+  background: var(--glass-sheet);
+  color: var(--text);
+  border-radius: 16px;
+}
+
+/* Hojas: flotan separadas de los bordes, de cristal, con la app desenfocada detrás */
+.sheet {
+  margin: 0 8px calc(8px + max(env(safe-area-inset-bottom) - 26px, 0px));
+  width: calc(100% - 16px);
+  max-width: 504px;
+  border-radius: 36px;
+  background: var(--glass-sheet);
+  -webkit-backdrop-filter: blur(30px) saturate(190%);
+  backdrop-filter: blur(30px) saturate(190%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset 0 1px 0 var(--glass-hi),
+    0 -10px 40px var(--glass-shadow);
+  overflow: hidden;
+}
+
+.sheet-body {
+  padding-bottom: calc(max(env(safe-area-inset-bottom) - 8px, 0px) + 18px);
+}
+
+/* Campos y listas dentro de la hoja: más opacos que la hoja, para leerlos bien */
+.sheet .list,
+.sheet .input,
+.sheet .segmented {
+  background: var(--glass-field);
+}
+
+.sheet .card {
+  background: var(--glass-field) !important;
+}
+
+.sheet-grabber {
+  background: var(--glass-border);
+  opacity: 0.9;
+}
+
+@media (min-width: 1024px) {
+  .sheet {
+    margin: 0;
+    width: 100%;
+    max-width: 520px;
+    border-radius: 30px;
+    box-shadow:
+      inset 0 1px 0 var(--glass-hi),
+      0 24px 80px rgba(0, 0, 0, 0.45);
+  }
+
+  .sheet-body {
+    padding-bottom: 24px;
+  }
+
+  /* Barra lateral flotante de cristal, separada del borde como en macOS */
+  .sidebar {
+    top: 14px;
+    left: 14px;
+    bottom: 14px;
+    width: 232px;
+    border-radius: 26px;
+    padding: 24px 14px;
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(26px) saturate(180%);
+    backdrop-filter: blur(26px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      inset 0 1px 0 var(--glass-hi),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+      0 18px 50px var(--glass-shadow);
+  }
+
+  .sidebar .card {
+    background: var(--glass-lens);
+    border-color: var(--glass-border);
+  }
+
+  .sidebar-link {
+    border-radius: 14px;
+  }
+
+  .sidebar-link[aria-current='page'] {
+    background: var(--glass-lens);
+    box-shadow:
+      inset 0 1px 0 var(--glass-hi),
+      0 2px 8px rgba(0, 0, 0, 0.18);
+  }
+
+  .desk .app-scroll {
+    margin-left: 256px;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .app::before {
+    display: none;
+  }
+
+  .total-card,
+  .glass-group,
+  .segmented,
+  .chart-tooltip,
+  .sheet,
+  .sidebar {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .card,
+  .list,
+  .total-card,
+  .glass-group,
+  .segmented,
+  .sidebar {
+    background: var(--surface);
+  }
+
+  .sheet,
+  .chart-tooltip {
+    background: var(--surface);
   }
 }
