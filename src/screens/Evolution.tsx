@@ -109,18 +109,54 @@ const compact = (v: number) => {
   return v.toLocaleString('es-ES', { maximumFractionDigits: 0 });
 };
 
+/** Medianoche del día: cada punto se dibuja sobre la marca de su día en el eje */
+const dayStart = (t: number) => {
+  const d = new Date(t);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+};
+
+/** Paso «redondo» (1, 2, 2,5 o 5 por potencia de 10) para las marcas del eje Y */
+function niceStep(raw: number): number {
+  const pow = 10 ** Math.floor(Math.log10(raw));
+  const f = raw / pow;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * pow;
+}
+
+/** Escala vertical con marcas redondas; si los valores apenas cambian, se abre lo justo para verlos */
+function yScale(values: number[]): { domain: [number, number] | ['auto', 'auto']; ticks?: number[]; step: number } {
+  if (!values.length) return { domain: ['auto', 'auto'], step: Infinity };
+  let lo = Math.min(...values);
+  let hi = Math.max(...values);
+  const pad = Math.max((hi - lo) * 0.1, Math.abs(hi) * 0.003, 1);
+  lo -= pad;
+  hi += pad;
+  const step = niceStep((hi - lo) / 4);
+  const from = Math.floor(lo / step) * step;
+  const to = Math.ceil(hi / step) * step;
+  const ticks: number[] = [];
+  for (let v = from; v <= to + step / 2; v += step) ticks.push(Math.round(v * 100) / 100);
+  return { domain: [from, to], ticks, step };
+}
+
+/** Etiquetas del eje Y: abreviadas («24,1k») salvo que el paso sea pequeño y se repetirían */
+const yFormatter = (step: number) => (v: number) =>
+  step < 1_000 ? v.toLocaleString('es-ES', { maximumFractionDigits: 0, useGrouping: true }) : compact(v);
+
 interface TipProps {
   active?: boolean;
-  payload?: { dataKey: string; value: number; color: string; name: string }[];
+  payload?: { dataKey: string; value: number; color: string; name: string; payload?: { at?: number } }[];
   label?: number;
   base: string;
 }
 
 function ChartTooltip({ active, payload, label, base }: TipProps) {
   if (!active || !payload?.length || label === undefined) return null;
+  // La fecha y hora reales del registro (el punto se dibuja a medianoche de su día)
+  const at = payload[0].payload?.at ?? label;
   return (
     <div className="chart-tooltip">
-      <span style={{ fontWeight: 600, opacity: 0.75 }}>{longDate(label)}</span>
+      <span style={{ fontWeight: 600, opacity: 0.75 }}>{longDate(at)}</span>
       {payload.map((p) => (
         <span key={p.dataKey} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span className="dot" style={{ background: p.color }} />
@@ -186,7 +222,12 @@ export function EvolutionScreen({
     return series
       .filter((p) => p.t >= start)
       .map((p) => {
-        const row: Record<string, number | null | string> = { t: p.t, day: p.day, total: p.total };
+        const row: Record<string, number | null | string> = {
+          t: Math.max(dayStart(p.t), start),
+          at: p.t,
+          day: p.day,
+          total: p.total,
+        };
         let sum: number | null = null;
         for (const a of selectedAccounts) {
           let value: number | null = null;
@@ -219,7 +260,13 @@ export function EvolutionScreen({
   const last = (withValue[withValue.length - 1]?.headline as number | undefined) ?? null;
   const change = first !== null && last !== null ? last - first : null;
   const pct = change !== null && first ? (change / Math.abs(first)) * 100 : null;
-  // Relleno degradado bajo la línea principal: el total o, si solo se ve una cuenta, esa cuenta
+  const yAxis = useMemo(() => {
+    const keys = [...(showTotal ? ['total'] : []), ...selectedAccounts.map((a) => `a_${a.id}`)];
+    const values = data.flatMap((d) => keys.map((k) => d[k])).filter((v): v is number => typeof v === 'number');
+    return yScale(values);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, showTotal, sel.join()]);
+  const yFormat = yFormatter(yAxis.step);
   const gradId = useId().replace(/:/g, '');
   const filled = showTotal ? null : selectedAccounts.length === 1 ? selectedAccounts[0] : null;
 
@@ -305,12 +352,13 @@ export function EvolutionScreen({
                 />
                 <YAxis
                   orientation="right"
-                  width={44}
-                  tickFormatter={compact}
+                  width={50}
+                  tickFormatter={yFormat}
                   tick={{ fontSize: 11, fill: 'var(--faint)' }}
                   axisLine={false}
                   tickLine={false}
-                  domain={['auto', 'auto']}
+                  domain={yAxis.domain}
+                  ticks={yAxis.ticks}
                 />
                 {selectedPoint && (
                   <ReferenceLine

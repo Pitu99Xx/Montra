@@ -2,6 +2,11 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.16.4 · 21 oct 2026
+
+- Corregido: en la gráfica de Evolución cada punto se dibujaba a la hora exacta del último registro del día (por ejemplo, el 20 a las 23:10 quedaba casi encima del 21). Ahora cada día cae justo sobre su marca del eje; la ventana al tocar sigue mostrando la fecha y hora reales.
+- El eje vertical usa marcas redondas y, cuando los valores cambian poco, muestra el importe completo (10.880, 10.900…) en lugar de repetir «10,9k».
+
 ## 1.16.3 · 21 oct 2026
 
 - Corregido en el ordenador: en «Evolución», la tabla de registros era más ancha que su columna y la variación se salía y quedaba cortada. La pantalla es ahora más ancha, las columnas se adaptan al espacio disponible y los textos largos se recortan con «…» sin descolocar la tabla.
