@@ -1,5 +1,14 @@
 import { useMemo, useState } from 'react';
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import {
+  Area,
+  CartesianGrid,
+  ComposedChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { IconCheck, IconPlus } from '../components/Icons';
 import { toast } from '../components/ui';
 import type { Project, Scenario } from '../data/model';
@@ -9,6 +18,8 @@ import { useStore } from '../data/store';
 import { formatMoney } from '../lib/currency';
 import { DESKTOP_QUERY, useMedia } from '../lib/useMedia';
 
+// En los degradados SVG no se pueden usar variables CSS de forma fiable: el dorado va en hexadecimal
+const GOLD = '#C9A45C';
 const DAY = 86_400_000;
 const SCENARIO_KEY = 'montra.projects.scenario';
 const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'];
@@ -218,7 +229,17 @@ export function ProjectsScreen({
       </div>
       <div key={effScenario} className="chart-anim" style={{ width: '100%', height: isDesktop ? 280 : 220 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chart.rows} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
+          <ComposedChart data={chart.rows} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
+            <defs>
+              <linearGradient id="projRealFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" style={{ stopColor: GOLD, stopOpacity: 0.28 }} />
+                <stop offset="100%" style={{ stopColor: GOLD, stopOpacity: 0 }} />
+              </linearGradient>
+              <linearGradient id="projFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" style={{ stopColor: GOLD, stopOpacity: 0.12 }} />
+                <stop offset="100%" style={{ stopColor: GOLD, stopOpacity: 0 }} />
+              </linearGradient>
+            </defs>
             <CartesianGrid vertical={false} stroke="var(--border)" />
             <XAxis
               dataKey="t"
@@ -260,27 +281,29 @@ export function ProjectsScreen({
               content={(props) => <ProjTooltip {...(props as unknown as TipProps)} base={base} />}
               cursor={{ stroke: 'var(--faint)', strokeDasharray: '3 3' }}
             />
-            <Line
+            <Area
               dataKey="real"
               stroke="var(--gold)"
               strokeWidth={3}
+              fill="url(#projRealFill)"
               dot={false}
-              activeDot={{ r: 5 }}
+              activeDot={{ r: 5, stroke: 'var(--bg)', strokeWidth: 2 }}
               connectNulls
               animationDuration={600}
             />
-            <Line
+            <Area
               dataKey="proj"
               type="stepAfter"
               stroke="var(--gold)"
               strokeWidth={2.5}
               strokeDasharray="6 5"
-              dot={{ r: 3, fill: 'var(--bg)', stroke: 'var(--gold)', strokeWidth: 2 }}
-              activeDot={{ r: 5 }}
+              fill="url(#projFill)"
+              dot={false}
+              activeDot={{ r: 5, stroke: 'var(--bg)', strokeWidth: 2 }}
               connectNulls
               animationDuration={700}
             />
-          </LineChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
       <p className="hint" style={{ margin: 0 }}>

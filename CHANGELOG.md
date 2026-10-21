@@ -2,6 +2,11 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.16.0 · 21 oct 2026
+
+- Gráficas más limpias, como en el boceto: sin puntos en cada valor (solo aparece uno al tocar o pasar el ratón) y con un degradado bajo la línea del total (o bajo la cuenta, si solo ves una). También en la proyección de Proyectos.
+- Resumen del ordenador: la gráfica ya no repite el saldo (está en el indicador de arriba); solo muestra la variación en el periodo elegido.
+
 ## 1.15.0 · 21 oct 2026
 
 - Liquid Glass completo, como en el boceto:

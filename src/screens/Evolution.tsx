@@ -1,5 +1,15 @@
-import { useMemo, useState } from 'react';
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { useId, useMemo, useState } from 'react';
+import {
+  Area,
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { useStore } from '../data/store';
 import { formatMoney } from '../lib/currency';
 import type { Account, Entry } from '../data/model';
@@ -7,6 +17,8 @@ import { RecordsList } from './RecordsList';
 import { childrenOf, topLevel } from '../data/groups';
 import { useHorizontalWheel } from '../lib/useHorizontalWheel';
 
+// En los degradados SVG no se pueden usar variables CSS de forma fiable: el dorado va en hexadecimal
+const GOLD = '#C9A45C';
 const RANGES = [
   { id: '1S', days: 7 },
   { id: '1M', days: 31 },
@@ -207,6 +219,9 @@ export function EvolutionScreen({
   const last = (withValue[withValue.length - 1]?.headline as number | undefined) ?? null;
   const change = first !== null && last !== null ? last - first : null;
   const pct = change !== null && first ? (change / Math.abs(first)) * 100 : null;
+  // Relleno degradado bajo la línea principal: el total o, si solo se ve una cuenta, esa cuenta
+  const gradId = useId().replace(/:/g, '');
+  const filled = showTotal ? null : selectedAccounts.length === 1 ? selectedAccounts[0] : null;
 
   return (
     <main className={embedded ? 'evo-embedded' : 'screen'}>
@@ -238,9 +253,12 @@ export function EvolutionScreen({
       ) : (
         <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span className="num" style={{ fontSize: 36, fontWeight: 500 }}>
-              {last !== null ? formatMoney(last, unit) : '—'}
-            </span>
+            {/* En el Resumen el saldo ya está en el indicador de arriba: solo se muestra la variación */}
+            {!embedded && (
+              <span className="num" style={{ fontSize: 36, fontWeight: 500 }}>
+                {last !== null ? formatMoney(last, unit) : '—'}
+              </span>
+            )}
             {change !== null && withValue.length > 1 && (
               <span style={{ color: 'var(--gold-text)', fontWeight: 600, fontSize: 14 }}>
                 {change >= 0 ? '+' : ''}
@@ -264,7 +282,13 @@ export function EvolutionScreen({
               </p>
             )}
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
+              <ComposedChart data={data} margin={{ top: 12, right: 4, left: 4, bottom: 0 }}>
+                <defs>
+                  <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" style={{ stopColor: filled ? filled.color : GOLD, stopOpacity: 0.28 }} />
+                    <stop offset="100%" style={{ stopColor: filled ? filled.color : GOLD, stopOpacity: 0 }} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid vertical={false} stroke="var(--border)" />
                 <XAxis
                   dataKey="t"
@@ -300,34 +324,51 @@ export function EvolutionScreen({
                   content={(props) => <ChartTooltip {...(props as unknown as TipProps)} base={unit} />}
                   cursor={{ stroke: 'var(--faint)', strokeDasharray: '3 3' }}
                 />
-                {selectedAccounts.map((a) => (
-                  <Line
-                    key={a.id}
-                    name={a.name}
-                    dataKey={`a_${a.id}`}
-                    stroke={a.color}
-                    strokeWidth={2}
-                    dot={{ r: 2.5, fill: a.color, strokeWidth: 0 }}
-                    activeDot={{ r: 5 }}
-                    animationDuration={700}
-                    animationEasing="ease-out"
-                    connectNulls
-                  />
-                ))}
-                {sel.includes('total') && (
-                  <Line
+                {selectedAccounts.map((a) =>
+                  filled?.id === a.id ? (
+                    <Area
+                      key={a.id}
+                      name={a.name}
+                      dataKey={`a_${a.id}`}
+                      stroke={a.color}
+                      strokeWidth={2.5}
+                      fill={`url(#${gradId})`}
+                      dot={false}
+                      activeDot={{ r: 5, stroke: 'var(--bg)', strokeWidth: 2 }}
+                      animationDuration={700}
+                      animationEasing="ease-out"
+                      connectNulls
+                    />
+                  ) : (
+                    <Line
+                      key={a.id}
+                      name={a.name}
+                      dataKey={`a_${a.id}`}
+                      stroke={a.color}
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 5, stroke: 'var(--bg)', strokeWidth: 2 }}
+                      animationDuration={700}
+                      animationEasing="ease-out"
+                      connectNulls
+                    />
+                  ),
+                )}
+                {showTotal && (
+                  <Area
                     name="Total"
                     dataKey="total"
                     stroke="var(--gold)"
                     strokeWidth={3}
-                    dot={{ r: 3.5, fill: 'var(--gold)', strokeWidth: 0 }}
+                    fill={`url(#${gradId})`}
+                    dot={false}
                     activeDot={{ r: 6, stroke: 'var(--bg)', strokeWidth: 2 }}
                     animationDuration={700}
                     animationEasing="ease-out"
                     connectNulls
                   />
                 )}
-              </LineChart>
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
           <p className="hint" style={{ marginTop: -6 }}>
