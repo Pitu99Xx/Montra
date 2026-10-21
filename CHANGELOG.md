@@ -2,6 +2,13 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.14.0 · 21 oct 2026
+
+- Estilo Liquid Glass, solo en los botones y en la barra de pestañas: los botones tienen fondo translúcido con desenfoque y un reflejo en el borde superior; los botones dorados (o azul marino en el tema claro) llevan un brillo de cristal.
+- En el iPhone, la barra de pestañas es ahora una cápsula de cristal flotante: el contenido pasa por debajo desenfocado y la pestaña activa se marca con un resalte de cristal.
+- Tarjetas, listas y gráficas siguen opacas, para que se lean bien y el desplazamiento vaya fluido.
+- Si activas «Reducir transparencia» en los ajustes de accesibilidad del iPhone o del Mac, los botones y la barra vuelven a ser opacos.
+
 ## 1.13.2 · 20 oct 2026
 
 - Ordenador: las filas de cuentas de la gráfica del Resumen y de los filtros de Registros ya no muestran barra de desplazamiento. Se siguen moviendo igual con el panel táctil y, ahora también, con la rueda del ratón.

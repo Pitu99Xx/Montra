@@ -19,6 +19,13 @@
   --backdrop: rgba(3, 8, 18, 0.72);
   --tooltip-bg: #f3eee4;
   --tooltip-text: #0b1b33;
+  /* Liquid Glass (botones y barra de pestañas) */
+  --glass-bg: rgba(255, 255, 255, 0.07);
+  --glass-bar: rgba(16, 35, 63, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-hi: rgba(255, 255, 255, 0.34);
+  --glass-lens: rgba(255, 255, 255, 0.13);
+  --glass-shadow: rgba(0, 0, 0, 0.35);
   color-scheme: dark;
 }
 
@@ -42,6 +49,12 @@
   --backdrop: rgba(11, 27, 51, 0.45);
   --tooltip-bg: #0b1b33;
   --tooltip-text: #f3eee4;
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-bar: rgba(255, 255, 255, 0.68);
+  --glass-border: rgba(11, 27, 51, 0.1);
+  --glass-hi: rgba(255, 255, 255, 0.95);
+  --glass-lens: rgba(11, 27, 51, 0.07);
+  --glass-shadow: rgba(11, 27, 51, 0.14);
   color-scheme: light;
 }
 
@@ -59,7 +72,7 @@ body,
 /* El fondo del documento es el de la barra inferior: si iOS recorta la parte de abajo de la
    pantalla (pasa a veces con la app instalada), la franja que queda se funde con la barra. */
 html {
-  background: var(--nav);
+  background: var(--bg);
 }
 
 body,
@@ -725,7 +738,7 @@ a {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(env(safe-area-inset-bottom) + 66px);
+  bottom: calc(env(safe-area-inset-bottom) + 74px);
   max-width: 496px;
   z-index: 11;
   display: flex;
@@ -1706,4 +1719,98 @@ input.input[type='time']::-webkit-date-and-time-value {
   background-repeat: no-repeat;
   background-position: right 12px center;
   cursor: pointer;
+}
+
+/* ── Liquid Glass: solo en los botones y en la barra de pestañas ──────────────
+   Cristal = fondo translúcido + desenfoque de lo que hay detrás + reflejo en el borde superior.
+   Las tarjetas, listas y gráficas siguen opacas: se leen mejor y el desplazamiento va fluido. */
+.btn-outline,
+.btn-ghost,
+.btn-danger {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset 0 1px 0 var(--glass-hi),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    0 4px 14px var(--glass-shadow);
+}
+
+.btn-outline {
+  border-color: color-mix(in srgb, var(--gold) 55%, transparent);
+}
+
+/* Botón principal: color sólido con brillo de cristal arriba */
+.btn-primary,
+.icon-btn.filled {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 55%),
+    var(--fill);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 6px 18px var(--glass-shadow);
+}
+
+.btn:disabled {
+  box-shadow: none;
+}
+
+/* Barra de pestañas (móvil): cápsula de cristal flotante; el contenido pasa por debajo, desenfocado */
+.tabbar {
+  left: 12px;
+  right: 12px;
+  bottom: max(calc(env(safe-area-inset-bottom) - 12px), 12px);
+  max-width: 496px;
+  margin: 0 auto;
+  padding: 5px;
+  border: 1px solid var(--glass-border);
+  border-radius: 34px;
+  background: var(--glass-bar);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  backdrop-filter: blur(26px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 var(--glass-hi),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    0 14px 36px var(--glass-shadow);
+}
+
+.tabbar .tab {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 52px;
+  justify-content: center;
+  gap: 3px;
+  font-size: 11px;
+  border-radius: 28px;
+  padding: 4px 2px;
+}
+
+.tabbar .tab[aria-current='page'] {
+  background: var(--glass-lens);
+  box-shadow:
+    inset 0 1px 0 var(--glass-hi),
+    0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* Si el sistema pide menos transparencia (Ajustes › Accesibilidad), todo vuelve a ser opaco */
+@media (prefers-reduced-transparency: reduce) {
+  .btn-outline,
+  .btn-ghost,
+  .btn-danger,
+  .tabbar {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .btn-outline,
+  .btn-ghost,
+  .btn-danger {
+    background: var(--surface);
+  }
+
+  .tabbar {
+    background: var(--nav);
+  }
 }
