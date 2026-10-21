@@ -2,6 +2,10 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.16.3 · 21 oct 2026
+
+- Corregido en el ordenador: en «Evolución», la tabla de registros era más ancha que su columna y la variación se salía y quedaba cortada. La pantalla es ahora más ancha, las columnas se adaptan al espacio disponible y los textos largos se recortan con «…» sin descolocar la tabla.
+
 ## 1.16.2 · 21 oct 2026
 
 - Los importes usan las cifras propias de Playfair Display, como en los bocetos (las que suben y bajan de la línea), en lugar de cifras de altura y ancho fijos.

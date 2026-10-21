@@ -224,7 +224,7 @@ export function EvolutionScreen({
   const filled = showTotal ? null : selectedAccounts.length === 1 ? selectedAccounts[0] : null;
 
   return (
-    <main className={embedded ? 'evo-embedded' : 'screen'}>
+    <main className={embedded ? 'evo-embedded' : 'screen evo-screen'}>
       {embedded ? (
         <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Evolución</h2>
       ) : (

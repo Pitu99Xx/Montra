@@ -1689,9 +1689,19 @@ input.input[type='time']::-webkit-date-and-time-value {
 /* Actualizaciones de saldos en columnas (ordenador) */
 .rec-cols {
   display: grid;
-  grid-template-columns: 34px minmax(170px, 1.3fr) minmax(150px, 1.2fr) 90px minmax(120px, 1fr) minmax(110px, 0.8fr);
+  /* Se adapta al ancho disponible: ninguna columna se sale de la tarjeta */
+  grid-template-columns:
+    34px minmax(0, 1.35fr) minmax(0, 1.25fr) minmax(0, 0.75fr) minmax(0, 1fr)
+    minmax(0, 0.85fr);
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+}
+
+.rec-cols > * {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rec-cols > .r {
@@ -1699,7 +1709,8 @@ input.input[type='time']::-webkit-date-and-time-value {
 }
 
 .rec-head {
-  padding: 0 16px 2px;
+  /* Misma rejilla que las filas (que van dentro de una tarjeta con borde de 1 px) */
+  padding: 0 17px 2px;
   font-size: 12px;
   font-weight: 600;
   color: var(--muted);
@@ -2038,5 +2049,12 @@ input.input[type='time']::-webkit-date-and-time-value {
   .sheet,
   .chart-tooltip {
     background: var(--surface);
+  }
+}
+
+/* «Evolución» en el ordenador: más ancha que el resto de pantallas para la gráfica y los registros */
+@media (min-width: 1024px) {
+  .desk .screen.evo-screen {
+    max-width: 1080px;
   }
 }
