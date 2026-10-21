@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { IconBackspace, IconFaceId } from '../components/Icons';
+import { IconBackspace, IconFaceId, IconTouchId } from '../components/Icons';
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
@@ -7,10 +7,13 @@ const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 export function PinPad({
   onComplete,
   onBiometric,
+  biometricLabel = 'Face ID',
   busy,
 }: {
   onComplete: (pin: string) => Promise<boolean> | boolean;
   onBiometric?: () => void;
+  /** «Face ID» o «Touch ID» */
+  biometricLabel?: string;
   busy?: boolean;
 }) {
   const [pin, setPin] = useState('');
@@ -65,8 +68,8 @@ export function PinPad({
           </button>
         ))}
         {onBiometric ? (
-          <button type="button" className="key plain" aria-label="Usar Face ID" onClick={onBiometric}>
-            <IconFaceId size={34} />
+          <button type="button" className="key plain" aria-label={`Usar ${biometricLabel}`} onClick={onBiometric}>
+            {biometricLabel === 'Touch ID' ? <IconTouchId size={34} /> : <IconFaceId size={34} />}
           </button>
         ) : (
           <span />

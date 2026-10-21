@@ -7,7 +7,13 @@ import { IconBell, IconChevron, IconPlus } from '../components/Icons';
 import type { Reminder, ThemePref } from '../data/model';
 import { saveUser } from '../data/actions';
 import { useStore } from '../data/store';
-import { biometricAvailable, biometricEnabled, disableBiometric, enableBiometric } from '../lib/biometric';
+import {
+  biometricAvailable,
+  biometricEnabled,
+  biometricName,
+  disableBiometric,
+  enableBiometric,
+} from '../lib/biometric';
 import { currencyName, currencySymbol } from '../lib/currency';
 import { withoutLock } from '../lib/lockGuard';
 import { DEFAULT_LOCK_MINUTES, LOCK_OPTIONS, setGraceMinutes } from '../lib/lockTimer';
@@ -51,7 +57,7 @@ export function SettingsScreen({
       await withoutLock(() => enableBiometric(uid, authUser.email ?? 'Montra'));
       setBio(true);
     } catch {
-      toast('No se pudo activar Face ID');
+      toast(`No se pudo activar ${biometricName()}`);
     }
   };
 
@@ -130,10 +136,10 @@ export function SettingsScreen({
         {bioAvail && (
           <div className="row">
             <span className="row-main">
-              <span className="row-title">Desbloquear con Face ID</span>
+              <span className="row-title">Desbloquear con {biometricName()}</span>
               <span className="row-sub">Solo en este dispositivo</span>
             </span>
-            <Switch checked={bio} onChange={toggleBio} label="Desbloquear con Face ID" />
+            <Switch checked={bio} onChange={toggleBio} label={`Desbloquear con ${biometricName()}`} />
           </div>
         )}
         <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
@@ -157,7 +163,7 @@ export function SettingsScreen({
       </section>
       <p className="hint">
         {(user.lockAfter ?? DEFAULT_LOCK_MINUTES) === 0
-          ? 'El código o Face ID se pedirá cada vez que vuelvas a abrir Montra.'
+          ? `El código o ${biometricName()} se pedirá cada vez que vuelvas a abrir Montra.`
           : `Si vuelves a Montra antes de ${user.lockAfter ?? DEFAULT_LOCK_MINUTES} ${(user.lockAfter ?? DEFAULT_LOCK_MINUTES) === 1 ? 'minuto' : 'minutos'}, no se pedirá el código.`}
       </p>
 

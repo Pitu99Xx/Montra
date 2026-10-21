@@ -2,6 +2,13 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.16.1 · 21 oct 2026
+
+- Corregido: Face ID / Touch ID dejaba de funcionar cada cierto tiempo. Las llaves de acceso se sincronizan por el llavero de iCloud y todas usaban el mismo usuario, así que al activarlo en el Mac se sustituía la del iPhone (y al revés). Ahora cada dispositivo crea su propia llave («Montra · iPhone», «Montra · Mac») y no se pisan.
+- Si aun así la llave guardada falla, al volver a tocar el icono la app busca tu llave de acceso de Montra en el llavero y la recuerda para la próxima vez, sin tener que desactivarlo y activarlo.
+- La app pide al navegador que no borre sus datos guardados en el dispositivo (Safari puede borrarlos si no se usa durante días).
+- En el Mac se llama Touch ID (con icono de huella) en lugar de Face ID.
+
 ## 1.16.0 · 21 oct 2026
 
 - Gráficas más limpias, como en el boceto: sin puntos en cada valor (solo aparece uno al tocar o pasar el ratón) y con un degradado bajo la línea del total (o bajo la cuenta, si solo ves una). También en la proyección de Proyectos.

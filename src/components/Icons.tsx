@@ -149,3 +149,11 @@ export const IconCheck = (p: P) => (
     <path d="M5 12l5 5 9-10" />
   </Base>
 );
+export const IconTouchId = (p: P) => (
+  <Base strokeWidth={1.6} {...p}>
+    <path d="M7.5 4.8A8.5 8.5 0 0 1 20.5 12v1M3.5 12a8.5 8.5 0 0 1 1.6-5" />
+    <path d="M6.5 12a5.5 5.5 0 0 1 11 0v2.5a10 10 0 0 1-1.2 4.8" />
+    <path d="M9.5 12a2.5 2.5 0 0 1 5 0v2.5a13 13 0 0 1-2 6.5" />
+    <path d="M12 12v2.5a16 16 0 0 1-3 8.5M6.6 15.5a14 14 0 0 1-.9 4.3M3.6 15.8c.2 1 .2 2-.1 3" />
+  </Base>
+);

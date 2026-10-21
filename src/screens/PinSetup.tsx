@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Logo } from '../components/Logo';
-import { biometricAvailable, enableBiometric } from '../lib/biometric';
+import { biometricAvailable, biometricName, enableBiometric } from '../lib/biometric';
 import { withoutLock } from '../lib/lockGuard';
 import { hashPin, verifyPin, type PinRecord } from '../lib/pin';
 import { saveUser } from '../data/actions';
@@ -70,9 +70,10 @@ export function PinSetup({
       <main className="center-screen">
         <div style={{ flex: 1 }} />
         <Logo size={72} />
-        <h1 className="brand">¿Usar Face ID?</h1>
+        <h1 className="brand">¿Usar {biometricName()}?</h1>
         <p className="muted" style={{ lineHeight: 1.5, maxWidth: 320 }}>
-          Desbloquea Montra con la cara en lugar del código. Podrás cambiarlo en Ajustes.
+          Desbloquea Montra con {biometricName() === 'Touch ID' ? 'tu huella' : 'la cara'} en lugar del código. Podrás
+          cambiarlo en Ajustes.
         </p>
         <div style={{ flex: 1 }} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
@@ -88,7 +89,7 @@ export function PinSetup({
               onDone();
             }}
           >
-            Activar Face ID
+            Activar {biometricName()}
           </button>
           <button type="button" className="btn btn-ghost" onClick={onDone}>
             Ahora no

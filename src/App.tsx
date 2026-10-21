@@ -11,6 +11,7 @@ import { StoreProvider, useStore } from './data/store';
 import { lockSuppressed } from './lib/lockGuard';
 import { lockOnReturn, lockOnStartup, markActive, markHidden, setGraceMinutes } from './lib/lockTimer';
 import { registerServiceWorker } from './lib/push';
+import { persistStorage } from './lib/biometric';
 import { applyUpdate, useNewVersion } from './lib/update';
 import { AccountDetail } from './screens/AccountDetail';
 import { GroupDetail } from './screens/GroupDetail';
@@ -68,6 +69,7 @@ export function App() {
 
   useEffect(() => {
     registerServiceWorker();
+    persistStorage();
     getRedirectResult(auth).catch((e) => setLoginError(authErrorMessage((e as { code?: string }).code)));
     return onAuthStateChanged(auth, (u) => {
       setOwner(null);

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import { Logo } from '../components/Logo';
-import { biometricEnabled, verifyBiometric } from '../lib/biometric';
+import { biometricEnabled, biometricName, verifyBiometric } from '../lib/biometric';
 import { withoutLock } from '../lib/lockGuard';
 import { verifyPin, type PinRecord } from '../lib/pin';
 import { PinPad } from './PinPad';
@@ -15,6 +15,8 @@ export function LockScreen({ uid, pin, onUnlock }: { uid: string; pin: PinRecord
   const [msg, setMsg] = useState('');
   const bio = biometricEnabled(uid);
   const inFlight = useRef(false);
+  // Tras un fallo con el botón, el siguiente toque busca la llave de acceso en el llavero
+  const failedOnce = useRef(false);
 
   // `manual`: lo ha pedido el usuario con el botón. Los intentos automáticos fallan en
   // silencio, porque iOS los rechaza a veces si no vienen de un toque.
@@ -23,10 +25,19 @@ export function LockScreen({ uid, pin, onUnlock }: { uid: string; pin: PinRecord
       if (inFlight.current) return;
       inFlight.current = true;
       try {
-        const ok = await withoutLock(() => verifyBiometric(uid));
+        const discover = manual && failedOnce.current;
+        const ok = await withoutLock(() => verifyBiometric(uid, discover));
         if (ok) onUnlock();
+        else if (manual) throw new Error('sin llave');
       } catch {
-        if (manual) setMsg('No se pudo usar Face ID. Inténtalo de nuevo o usa tu código.');
+        if (manual) {
+          setMsg(
+            failedOnce.current
+              ? `No se pudo usar ${biometricName()}. Usa tu código; si sigue fallando, vuelve a activarlo en Ajustes.`
+              : `No se pudo usar ${biometricName()}. Toca otra vez el icono para buscar tu llave de acceso, o usa tu código.`,
+          );
+          failedOnce.current = true;
+        }
       } finally {
         inFlight.current = false;
       }
@@ -80,7 +91,11 @@ export function LockScreen({ uid, pin, onUnlock }: { uid: string; pin: PinRecord
       <p className="muted" style={{ margin: '28px 0 0' }}>
         Introduce tu código
       </p>
-      <PinPad onComplete={check} onBiometric={bio ? () => tryBiometric(true) : undefined} />
+      <PinPad
+        onComplete={check}
+        onBiometric={bio ? () => tryBiometric(true) : undefined}
+        biometricLabel={biometricName()}
+      />
       <p className="error" style={{ marginTop: 20 }} role="alert">
         {msg}
       </p>
