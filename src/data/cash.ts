@@ -198,8 +198,8 @@ export const lastDays = (list: CashMovement[], days: number) => {
   let income = 0;
   let expense = 0;
   for (const m of list) {
-    // Solo cuentan los que tienen fecha (los «sin fecha» no se sabe cuándo fueron)
-    if (!m.date || m.pos < from || m.pos > Date.now() + DAY) continue;
+    // Los «sin fecha» cuentan según el lugar que ocupan en la lista
+    if (m.pos < from || m.pos > Date.now() + DAY) continue;
     const v = signedAmount(m);
     if (v >= 0) income += v;
     else expense -= v;

@@ -2,6 +2,10 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.18.1 · 3 nov 2026
+
+- Efectivo: los gastos e ingresos «sin fecha» ahora cuentan en los totales de los últimos 30 días según el lugar que ocupan en la lista (antes se dejaban fuera y un ingreso reciente sin fecha no aparecía).
+
 ## 1.18.0 · 3 nov 2026
 
 - Desglose de billetes: cada vez que cuadras la caja se guarda el recuento (cuántos billetes de 200, 100, 50, 20, 10 y 5 €, las monedas, el total y si cuadraba). El siguiente recuento parte del anterior, así solo cambias lo que no coincida.
