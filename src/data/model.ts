@@ -190,3 +190,19 @@ export interface CashMovement {
   note?: string;
   createdAt?: number;
 }
+
+/** Billetes que se cuentan (los de 500 € ya casi no circulan y no se muestran). */
+export const CASH_NOTES = [200, 100, 50, 20, 10, 5] as const;
+
+/** Un recuento de la caja: cuántos billetes de cada tipo había, monedas y si cuadraba. */
+export interface CashCount {
+  id: string;
+  /** Momento del recuento (ms) */
+  at: number;
+  /** Billetes por valor («50» → 6); null si se escribió solo el total */
+  notes: Record<string, number> | null;
+  coins: number;
+  total: number;
+  /** Saldo que calculaba Montra en ese momento */
+  expected: number;
+}

@@ -2125,3 +2125,87 @@ input.input[type='time']::-webkit-date-and-time-value {
   justify-content: center;
   padding: 0;
 }
+
+/* ── Billetes ─────────────────────────────────────────────── */
+.status-chip {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.status-chip.ok {
+  background: color-mix(in srgb, #7fd1b9 18%, transparent);
+  color: var(--ok, #5fbf9f);
+}
+
+.status-chip.warn {
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+  color: var(--danger);
+}
+
+.ok-text {
+  color: #5fbf9f;
+}
+
+.bill-bar {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.bill-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.bill-grid.wide {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.bill-tile {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bill-face {
+  height: 44px;
+  border-radius: 8px;
+  color: #0b1b33;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-weight: 800;
+  font-size: 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.bill-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 9px;
+  border-radius: 10px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+}
+
+.bills-card {
+  width: 100%;
+  padding: 14px 16px;
+  display: flex;
+  text-align: left;
+  color: var(--text);
+  font: inherit;
+}

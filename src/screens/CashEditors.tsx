@@ -9,11 +9,12 @@ import {
   newCashId,
   posForDate,
   replaceCashMovements,
+  saveCashCount,
   saveCashMovement,
   signedAmount,
   sortCash,
 } from '../data/cash';
-import type { Account, CashMovement } from '../data/model';
+import { CASH_NOTES, type Account, type CashMovement } from '../data/model';
 import { useStore } from '../data/store';
 import { currencySymbol, formatAmount, formatMoney, parseAmount } from '../lib/currency';
 import { parseCashSheet, type ImportResult } from '../lib/cashImport';
@@ -244,16 +245,20 @@ export function CashMovementEditor({
   );
 }
 
-const NOTES = [500, 200, 100, 50, 20, 10, 5];
+const NOTES = CASH_NOTES;
 
 /** Cuadrar la caja: cuentas billetes y monedas; la diferencia se apunta como ajuste. */
 export function CashCountSheet({ account, onClose }: { account: Account; onClose: () => void }) {
-  const { uid, cash, rates } = useStore();
+  const { uid, cash, cashCounts, rates } = useStore();
   const { closing, close } = useSheetExit(onClose);
   const code = account.currency;
+  // Se parte del último recuento: solo hay que corregir lo que haya cambiado
+  const last = cashCounts.at(-1);
   const [mode, setMode] = useState<'count' | 'total'>('count');
-  const [counts, setCounts] = useState<Record<number, number>>({});
-  const [coinsText, setCoinsText] = useState('');
+  const [counts, setCounts] = useState<Record<number, number>>(() =>
+    Object.fromEntries(NOTES.map((n) => [n, last?.notes?.[n] ?? 0])),
+  );
+  const [coinsText, setCoinsText] = useState(last?.notes ? formatAmount(last.coins, code) : '');
   const [totalText, setTotalText] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -266,15 +271,23 @@ export function CashCountSheet({ account, onClose }: { account: Account; onClose
   const step = (n: number, d: number) => setCounts((c) => ({ ...c, [n]: Math.max(0, (c[n] ?? 0) + d) }));
 
   const apply = async () => {
-    if (diff === null) return;
-    if (Math.abs(diff) < 0.005) {
-      toast('La caja cuadra', { sub: 'No hace falta ningún ajuste' });
-      close();
-      return;
-    }
+    if (diff === null || counted === null) return;
     setBusy(true);
     const d = today();
     try {
+      // El recuento se guarda siempre (con sus billetes si se contaron uno a uno)
+      await saveCashCount(uid, {
+        at: Date.now(),
+        notes: mode === 'count' ? Object.fromEntries(NOTES.map((n) => [String(n), counts[n] ?? 0])) : null,
+        coins: mode === 'count' ? coins : 0,
+        total: counted,
+        expected,
+      });
+      if (Math.abs(diff) < 0.005) {
+        toast('La caja cuadra', { sub: 'Recuento guardado' });
+        close();
+        return;
+      }
       await saveCashMovement(
         uid,
         account,
@@ -290,7 +303,7 @@ export function CashCountSheet({ account, onClose }: { account: Account; onClose
         cash,
         rates,
       );
-      toast('Ajuste apuntado', { sub: `Ahora tienes ${formatMoney(counted!, code)} en efectivo` });
+      toast('Recuento guardado y ajuste apuntado', { sub: `Ahora tienes ${formatMoney(counted, code)} en efectivo` });
       close();
     } catch (e) {
       console.error(e);
@@ -302,7 +315,8 @@ export function CashCountSheet({ account, onClose }: { account: Account; onClose
   return (
     <Sheet title="Cuadrar la caja" onClose={close} closing={closing}>
       <p className="hint" style={{ textAlign: 'center' }}>
-        Cuenta lo que tienes. Si no coincide con lo que calcula Montra, se apunta un ajuste por la diferencia.
+        Cuenta lo que tienes{last?.notes ? ' (parte del último recuento: cambia solo lo que no coincida)' : ''}. Se
+        guarda el recuento y, si no coincide con lo que calcula Montra, se apunta un ajuste por la diferencia.
       </p>
       <div className="segmented" role="group" aria-label="Cómo contar">
         <button type="button" aria-pressed={mode === 'count'} onClick={() => setMode('count')}>
@@ -417,7 +431,7 @@ export function CashCountSheet({ account, onClose }: { account: Account; onClose
       <button type="button" className="btn btn-primary" disabled={diff === null || busy} onClick={apply}>
         {diff !== null && Math.abs(diff) >= 0.005
           ? `Apuntar ajuste de ${diff > 0 ? '+' : '−'}${formatMoney(Math.abs(diff), code)}`
-          : 'Listo'}
+          : 'Guardar recuento'}
       </button>
     </Sheet>
   );

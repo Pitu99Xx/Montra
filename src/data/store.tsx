@@ -9,6 +9,7 @@ export { computeTotalEUR } from './totals';
 import {
   DEFAULT_USER,
   type Account,
+  type CashCount,
   type CashMovement,
   type Entry,
   type Project,
@@ -42,6 +43,8 @@ interface Store {
   /** Movimientos de efectivo (del más antiguo al más reciente) */
   cash: CashMovement[];
   cashLoaded: boolean;
+  /** Recuentos de billetes (del más antiguo al más reciente) */
+  cashCounts: CashCount[];
   /** La cuenta fija de efectivo */
   cashAccount: Account | undefined;
 }
@@ -72,6 +75,7 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
   const [projects, setProjects] = useState<Project[]>([]);
   const [cash, setCash] = useState<CashMovement[]>([]);
   const [cashLoaded, setCashLoaded] = useState(false);
+  const [cashCounts, setCashCounts] = useState<CashCount[]>([]);
 
   useEffect(() => {
     const unsubs = [
@@ -120,6 +124,9 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
       onSnapshot(query(collection(db, 'users', uid, 'cash'), orderBy('pos')), (s) => {
         setCash(s.docs.map((d) => ({ ...(d.data() as Omit<CashMovement, 'id'>), id: d.id })));
         setCashLoaded(true);
+      }),
+      onSnapshot(query(collection(db, 'users', uid, 'cashCounts'), orderBy('at')), (s) => {
+        setCashCounts(s.docs.map((d) => ({ ...(d.data() as Omit<CashCount, 'id'>), id: d.id })));
       }),
       onSnapshot(
         doc(db, 'rates', 'latest'),
@@ -255,6 +262,7 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
       projects,
       cash,
       cashLoaded,
+      cashCounts,
       cashAccount: accounts.find((a) => a.cash),
     };
   }, [
@@ -271,6 +279,7 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
     projects,
     cash,
     cashLoaded,
+    cashCounts,
   ]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

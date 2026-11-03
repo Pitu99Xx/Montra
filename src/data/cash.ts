@@ -2,6 +2,7 @@ import {
   Timestamp,
   collection,
   doc,
+  deleteDoc,
   getDocs,
   query,
   serverTimestamp,
@@ -13,7 +14,7 @@ import {
 import { db } from '../firebase';
 import { dayKey } from './series';
 import { saveUser } from './actions';
-import { ACCOUNT_COLORS, type Account, type CashMovement, type Rates } from './model';
+import { ACCOUNT_COLORS, CASH_NOTES, type Account, type CashCount, type CashMovement, type Rates } from './model';
 
 const cashCol = (uid: string) => collection(db, 'users', uid, 'cash');
 const DAY = 86_400_000;
@@ -205,3 +206,23 @@ export const lastDays = (list: CashMovement[], days: number) => {
   }
   return { income, expense };
 };
+
+// ── Recuentos de billetes ────────────────────────────────────────────────
+
+const countsCol = (uid: string) => collection(db, 'users', uid, 'cashCounts');
+
+export const notesTotal = (notes: Record<string, number> | null, coins: number) =>
+  Math.round(((notes ? CASH_NOTES.reduce((s, n) => s + n * (notes[n] ?? 0), 0) : 0) + coins) * 100) / 100;
+
+export async function saveCashCount(uid: string, count: Omit<CashCount, 'id'>) {
+  await setDoc(doc(countsCol(uid)), count);
+}
+
+export function deleteCashCount(uid: string, count: CashCount) {
+  return deleteDoc(doc(countsCol(uid), count.id));
+}
+
+export function restoreCashCount(uid: string, count: CashCount) {
+  const { id, ...data } = count;
+  return setDoc(doc(countsCol(uid), id), data);
+}

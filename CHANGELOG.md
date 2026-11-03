@@ -2,6 +2,13 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.18.0 · 3 nov 2026
+
+- Desglose de billetes: cada vez que cuadras la caja se guarda el recuento (cuántos billetes de 200, 100, 50, 20, 10 y 5 €, las monedas, el total y si cuadraba). El siguiente recuento parte del anterior, así solo cambias lo que no coincida.
+- Nueva pantalla «Tus billetes» (desde la ficha de Efectivo): el desglose del último recuento con el color de cada billete y lo que suma cada uno.
+- Aviso de descuadre: si después de contar apuntas movimientos, los billetes dejan de sumar lo mismo que el saldo; la app lo marca («Descuadre», con la diferencia) hasta que vuelvas a contar.
+- Historial de recuentos: fecha, total y resultado («Cuadraba» o el ajuste apuntado); al tocar uno ves sus billetes y qué cambió respecto al anterior, y puedes eliminarlo (con «Deshacer», sin tocar tus movimientos).
+
 ## 1.17.0 · 3 nov 2026
 
 - Nueva gestión del **Efectivo**: tu cuenta «Efectivo» pasa a ser una cuenta fija (no se puede eliminar) cuyo saldo se calcula solo con los ingresos y gastos que apuntas. En «Actualizar saldos» aparece ya calculada.

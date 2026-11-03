@@ -1,8 +1,17 @@
 import { useMemo, useState } from 'react';
 import { AccountIcon } from '../components/ui';
 import { IconBack, IconPencil, IconScale, IconSearch, IconUpload } from '../components/Icons';
-import { cashBalance, expensesByConcept, lastDays, runningBalances, signedAmount, sortCash } from '../data/cash';
-import type { Account, CashKind, CashMovement } from '../data/model';
+import {
+  cashBalance,
+  expensesByConcept,
+  lastDays,
+  notesTotal,
+  runningBalances,
+  signedAmount,
+  sortCash,
+} from '../data/cash';
+import { NOTE_COLORS } from './CashBills';
+import { CASH_NOTES, type Account, type CashKind, type CashMovement } from '../data/model';
 import { useStore } from '../data/store';
 import { formatMoney } from '../lib/currency';
 import { DESKTOP_QUERY, useMedia } from '../lib/useMedia';
@@ -32,6 +41,7 @@ export function CashDetail({
   onEdit,
   onCount,
   onImport,
+  onBills,
 }: {
   account: Account;
   closing: boolean;
@@ -41,8 +51,9 @@ export function CashDetail({
   onEdit: (m: CashMovement) => void;
   onCount: () => void;
   onImport: () => void;
+  onBills: () => void;
 }) {
-  const { cash, cashLoaded } = useStore();
+  const { cash, cashLoaded, cashCounts } = useStore();
   useBottomBand('--bg');
   const isDesktop = useMedia(DESKTOP_QUERY);
   const [filter, setFilter] = useState<Filter>('all');
@@ -185,8 +196,47 @@ export function CashDetail({
     </>
   );
 
+  // Resumen de «Tus billetes»: el último recuento con billetes y si cuadra con el saldo
+  const lastCount = [...cashCounts].reverse().find((c) => c.notes);
+  const billsTotal = lastCount ? notesTotal(lastCount.notes, lastCount.coins) : 0;
+  const billsOk = !!lastCount && Math.abs(billsTotal - balance) < 0.005;
+  const billsCard = (
+    <button type="button" className="card bills-card" onClick={onBills}>
+      <span className="row-main" style={{ gap: 8 }}>
+        <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontWeight: 600, fontSize: 15 }}>Tus billetes</span>
+          {lastCount ? (
+            <span className={`status-chip ${billsOk ? 'ok' : 'warn'}`}>{billsOk ? 'Cuadra' : 'Descuadre'}</span>
+          ) : (
+            <span className="row-sub">Sin contar</span>
+          )}
+        </span>
+        {lastCount ? (
+          <>
+            <span className="bill-bar" aria-hidden="true">
+              {CASH_NOTES.filter((n) => lastCount.notes![n]).map((n) => (
+                <span
+                  key={n}
+                  style={{ width: `${((n * lastCount.notes![n]) / billsTotal) * 100}%`, background: NOTE_COLORS[n] }}
+                />
+              ))}
+            </span>
+            <span className="row-sub">
+              {billsOk
+                ? `${formatMoney(billsTotal, code)} en billetes y monedas`
+                : `Tus billetes suman ${formatMoney(billsTotal, code)}: recuenta para ponerlos al día`}
+            </span>
+          </>
+        ) : (
+          <span className="row-sub">Cuenta tus billetes para guardar el desglose</span>
+        )}
+      </span>
+    </button>
+  );
+
   const side = (
     <>
+      {billsCard}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <div className="card mini-stat" style={{ background: 'var(--panel)' }}>
           <span className="row-sub">Gastos · 30 días</span>

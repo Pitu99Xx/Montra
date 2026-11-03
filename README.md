@@ -57,6 +57,8 @@ users/{uid}/projects/{id}        proyecto: nombre, color, selected, margin (%) y
 users/{uid}/cash/{id}            movimiento de efectivo: kind (income|expense|adjust), amount,
                                  concept, date (AAAA-MM-DD o null), pos (orden en el tiempo),
                                  note; la cuenta con cash: true rehace sus registros con ellos
+users/{uid}/cashCounts/{id}      recuento de billetes: at, notes (billetes por valor o null),
+                                 coins, total y expected (saldo que calculaba Montra)
 users/{uid}/devices/{id}         tokens de notificaciones
 rates/latest                     tipos de cambio del BCE (los escribe la función)
 ```

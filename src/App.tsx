@@ -27,6 +27,7 @@ import { SettingsScreen } from './screens/Settings';
 import { UpdateBalances } from './screens/UpdateBalances';
 import { ProjectDetail } from './screens/ProjectDetail';
 import { CashDetail } from './screens/CashDetail';
+import { CashBills } from './screens/CashBills';
 import { CashCountSheet, CashImportSheet, CashMovementEditor } from './screens/CashEditors';
 import { MovementEditor, ProjectEditor, ProjectMinEditor } from './screens/ProjectEditors';
 
@@ -103,6 +104,8 @@ type Tab = 'resumen' | 'cuentas' | 'evolucion' | 'proyectos' | 'ajustes';
 const TABS: Tab[] = ['resumen', 'cuentas', 'evolucion', 'proyectos', 'ajustes'];
 /** En la pila de fichas, los proyectos van con este prefijo (el resto son cuentas) */
 const PROJ = 'p:';
+/** «Tus billetes» de la cuenta de efectivo */
+const BILLS = 'b:';
 type SheetState =
   | { kind: 'account'; account: Account | null; parentId?: string }
   | { kind: 'update'; groupId?: string }
@@ -171,7 +174,9 @@ function Shell({ authUser }: { authUser: User }) {
   useEffect(() => {
     if (closingTop) return;
     const alive = detailStack.filter((id) =>
-      id.startsWith(PROJ) ? projects.some((p) => PROJ + p.id === id) : accounts.some((a) => a.id === id),
+      id.startsWith(PROJ)
+        ? projects.some((p) => PROJ + p.id === id)
+        : accounts.some((a) => a.id === (id.startsWith(BILLS) ? id.slice(BILLS.length) : id)),
     );
     if (alive.length !== detailStack.length) setDetailStack(alive);
   }, [detailStack, accounts, projects, closingTop]);
@@ -395,6 +400,19 @@ function Shell({ authUser }: { authUser: User }) {
             />
           );
         }
+        if (id.startsWith(BILLS)) {
+          const cashAcc = accounts.find((a) => BILLS + a.id === id);
+          if (!cashAcc) return null;
+          return (
+            <CashBills
+              key={`${id}-${i}`}
+              account={cashAcc}
+              closing={closing}
+              onBack={closeDetail}
+              onRecount={() => setSheet({ kind: 'cashCount', account: cashAcc })}
+            />
+          );
+        }
         const acc = accounts.find((a) => a.id === id);
         if (!acc) return null;
         if (acc.cash)
@@ -409,6 +427,7 @@ function Shell({ authUser }: { authUser: User }) {
               onEdit={(movement) => setSheet({ kind: 'cashMove', account: acc, movement, type: 'expense' })}
               onCount={() => setSheet({ kind: 'cashCount', account: acc })}
               onImport={() => setSheet({ kind: 'cashImport', account: acc })}
+              onBills={() => openDetail(BILLS + acc.id)}
             />
           );
         return acc.isGroup ? (
