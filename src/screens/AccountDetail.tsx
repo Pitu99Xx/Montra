@@ -22,6 +22,7 @@ export function SourceIcon({ source }: { source: EntrySource }) {
     edit: { icon: <IconPencil size={18} />, color: '#9CC3F5' },
     initial: { icon: <IconPlus size={18} />, color: '#7FD1B9' },
     closed: { icon: <IconClose size={18} />, color: 'var(--danger)' },
+    cash: { icon: <IconRefresh size={18} />, color: 'var(--gold-text)' },
   };
   const { icon, color } = map[source];
   return (

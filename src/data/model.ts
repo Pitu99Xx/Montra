@@ -21,10 +21,12 @@ export interface Account {
   isGroup?: boolean;
   /** Subcuenta: id de la cuenta con subcuentas a la que pertenece */
   parentId?: string | null;
+  /** Cuenta fija de efectivo: su saldo se calcula con sus movimientos (ingresos y gastos) */
+  cash?: boolean;
 }
 
 /** Cómo se introdujo un registro */
-export type EntrySource = 'initial' | 'update' | 'edit' | 'closed' | 'migrated';
+export type EntrySource = 'initial' | 'update' | 'edit' | 'closed' | 'migrated' | 'cash';
 
 /** Un valor introducido: el saldo de una cuenta en un momento dado. */
 export interface Entry {
@@ -50,6 +52,7 @@ export const SOURCE_LABEL: Record<EntrySource, string> = {
   edit: 'Editado a mano',
   closed: 'Cuenta eliminada',
   migrated: 'Actualización de saldos',
+  cash: 'Movimientos de efectivo',
 };
 
 export interface Reminder {
@@ -81,6 +84,8 @@ export interface UserDoc {
   zeroDecimalFixed?: boolean;
   /** Proyectos: saldo mínimo deseado (en la divisa base) para avisar en la proyección */
   projectMin?: number | null;
+  /** Ya se preparó la cuenta fija «Efectivo» (1.17.0) */
+  cashSetupDone?: boolean;
 }
 
 export interface SnapshotAccount {
@@ -168,3 +173,20 @@ export interface Project {
 }
 
 export type Scenario = 'expected' | 'pessimistic' | 'optimistic';
+
+/** Efectivo: ingreso, gasto o ajuste al cuadrar la caja (el ajuste lleva signo). */
+export type CashKind = 'income' | 'expense' | 'adjust';
+
+export interface CashMovement {
+  id: string;
+  kind: CashKind;
+  /** Positivo en ingresos y gastos; con signo en los ajustes */
+  amount: number;
+  concept: string;
+  /** «AAAA-MM-DD» o null si no tiene fecha */
+  date: string | null;
+  /** Posición en el tiempo (ms): la fecha o, sin fecha, el hueco que ocupa entre sus vecinos */
+  pos: number;
+  note?: string;
+  createdAt?: number;
+}

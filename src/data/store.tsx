@@ -6,7 +6,16 @@ import { computeTotalEUR } from './totals';
 import { autoGroupRevolut, migrateSnapshots, repairZeroDecimalAmounts, requestRatesRefresh } from './actions';
 import { buildSeries, type DayPoint } from './series';
 export { computeTotalEUR } from './totals';
-import { DEFAULT_USER, type Account, type Entry, type Project, type Rates, type UserDoc } from './model';
+import {
+  DEFAULT_USER,
+  type Account,
+  type CashMovement,
+  type Entry,
+  type Project,
+  type Rates,
+  type UserDoc,
+} from './model';
+import { setupCashAccount } from './cash';
 
 interface Store {
   uid: string;
@@ -30,6 +39,11 @@ interface Store {
   valueIn: (amount: number, from: string) => number | null;
   /** Proyectos (previsiones), ordenados */
   projects: Project[];
+  /** Movimientos de efectivo (del más antiguo al más reciente) */
+  cash: CashMovement[];
+  cashLoaded: boolean;
+  /** La cuenta fija de efectivo */
+  cashAccount: Account | undefined;
 }
 
 const Ctx = createContext<Store | null>(null);
@@ -56,6 +70,8 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
   const [serverRates, setServerRates] = useState<Rates | null>(null);
   const [liveRates, setLiveRates] = useState<Rates | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [cash, setCash] = useState<CashMovement[]>([]);
+  const [cashLoaded, setCashLoaded] = useState(false);
 
   useEffect(() => {
     const unsubs = [
@@ -95,8 +111,15 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
       }),
       onSnapshot(query(collection(db, 'users', uid, 'projects'), orderBy('order')), (s) => {
         setProjects(
-          s.docs.map((d) => ({ selected: true, margin: 0, movements: [], ...(d.data() as Partial<Project>), id: d.id }) as Project),
+          s.docs.map(
+            (d) =>
+              ({ selected: true, margin: 0, movements: [], ...(d.data() as Partial<Project>), id: d.id }) as Project,
+          ),
         );
+      }),
+      onSnapshot(query(collection(db, 'users', uid, 'cash'), orderBy('pos')), (s) => {
+        setCash(s.docs.map((d) => ({ ...(d.data() as Omit<CashMovement, 'id'>), id: d.id })));
+        setCashLoaded(true);
       }),
       onSnapshot(
         doc(db, 'rates', 'latest'),
@@ -178,7 +201,27 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
       console.error('Reparación de importes', e);
       repairing.current = false;
     });
-  }, [userLoaded, accountsLoaded, entriesLoaded, user.entriesMigrated, user.zeroDecimalFixed, uid, entries, allAccounts]);
+  }, [
+    userLoaded,
+    accountsLoaded,
+    entriesLoaded,
+    user.entriesMigrated,
+    user.zeroDecimalFixed,
+    uid,
+    entries,
+    allAccounts,
+  ]);
+
+  // Una sola vez (1.17.0): la cuenta «Efectivo» pasa a ser la cuenta fija de efectivo
+  const settingCash = useRef(false);
+  useEffect(() => {
+    if (!userLoaded || !accountsLoaded || !user.entriesMigrated || user.cashSetupDone || settingCash.current) return;
+    settingCash.current = true;
+    setupCashAccount(uid, accounts).catch((e) => {
+      console.error('Cuenta de efectivo', e);
+      settingCash.current = false;
+    });
+  }, [userLoaded, accountsLoaded, user.entriesMigrated, user.cashSetupDone, uid, accounts]);
 
   const series = useMemo(
     () => buildSeries(entries, allAccounts, user.baseCurrency, rates?.rates),
@@ -201,13 +244,34 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
       rates,
       totalEUR,
       missingRates: [
-        ...new Set(accounts.filter((a) => !a.isGroup && a.currency !== 'EUR' && !rates?.rates[a.currency]).map((a) => a.currency)),
+        ...new Set(
+          accounts
+            .filter((a) => !a.isGroup && a.currency !== 'EUR' && !rates?.rates[a.currency])
+            .map((a) => a.currency),
+        ),
       ],
       total: totalEUR === null ? null : convert(totalEUR, 'EUR', base, rates),
       valueIn: (amount, from) => convert(amount, from, base, rates),
       projects,
+      cash,
+      cashLoaded,
+      cashAccount: accounts.find((a) => a.cash),
     };
-  }, [uid, user, userLoaded, accounts, allAccounts, accountsLoaded, entries, entriesLoaded, series, rates, projects]);
+  }, [
+    uid,
+    user,
+    userLoaded,
+    accounts,
+    allAccounts,
+    accountsLoaded,
+    entries,
+    entriesLoaded,
+    series,
+    rates,
+    projects,
+    cash,
+    cashLoaded,
+  ]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

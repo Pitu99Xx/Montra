@@ -22,6 +22,8 @@ Cloud Messaging y Hosting.
   exacta, aproximada (mes) o sin fecha. Al marcar proyectos se ve el saldo final si se cumplen, una proyección
   en el tiempo con aviso de saldo mínimo y escenarios pesimista / optimista según el margen de cada proyecto.
   No cambian las cuentas; se convierten siempre con el cambio del día.
+- **Efectivo:** la cuenta fija «Efectivo» calcula su saldo con sus ingresos y gastos (con o sin fecha); se
+  pueden cuadrar billetes y monedas e importar un Excel con columnas de concepto y cantidad.
 - **Ajustes:** cambiar PIN, Face ID, divisa del total, tema (oscuro / claro / sistema), notificaciones y
   recordatorios semanales con los días y la hora que quieras.
 
@@ -52,6 +54,9 @@ users/{uid}/projects/{id}        proyecto: nombre, color, selected, margin (%) y
                                  movimientos previstos (kind, concept, amount, currency,
                                  dateMode exact|month|none, date); dateMode/date del
                                  proyecto, si los tiene, mandan sobre los de los movimientos
+users/{uid}/cash/{id}            movimiento de efectivo: kind (income|expense|adjust), amount,
+                                 concept, date (AAAA-MM-DD o null), pos (orden en el tiempo),
+                                 note; la cuenta con cash: true rehace sus registros con ellos
 users/{uid}/devices/{id}         tokens de notificaciones
 rates/latest                     tipos de cambio del BCE (los escribe la función)
 ```

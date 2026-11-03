@@ -2,6 +2,15 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.17.0 · 3 nov 2026
+
+- Nueva gestión del **Efectivo**: tu cuenta «Efectivo» pasa a ser una cuenta fija (no se puede eliminar) cuyo saldo se calcula solo con los ingresos y gastos que apuntas. En «Actualizar saldos» aparece ya calculada.
+- Ficha de Efectivo: saldo, botones «− Gasto» y «+ Ingreso», gastos e ingresos de los últimos 30 días, movimientos por mes con el saldo tras cada uno, filtro (todos, gastos, ingresos) y buscador. En el Mac, además, «En qué se va» (gastos por concepto).
+- Nuevo gasto o ingreso: importe, concepto con tus conceptos habituales y su último importe (un toque los rellena), fecha (hoy, ayer, otra o sin fecha) y nota. Al tocar un movimiento se edita o se elimina (con «Deshacer»).
+- Cuadrar la caja: cuenta billetes y monedas (o escribe el total) y, si no coincide, se apunta un «Ajuste de caja» por la diferencia.
+- Importar Excel: lee tus columnas de ingresos y gastos, separa la fecha cuando va dentro del concepto («Paqui 30/10/2025» → «Paqui», 30 oct 2025) y deja sin fecha las filas que no la tienen, en su orden. Sustituye los movimientos y rehace el historial de la cuenta.
+- La evolución de la cuenta de efectivo sale de sus movimientos: un punto por día con el saldo al final del día.
+
 ## 1.16.4 · 21 oct 2026
 
 - Corregido: en la gráfica de Evolución cada punto se dibujaba a la hora exacta del último registro del día (por ejemplo, el 20 a las 23:10 quedaba casi encima del 21). Ahora cada día cae justo sobre su marca del eje; la ventana al tocar sigue mostrando la fecha y hora reales.

@@ -157,3 +157,15 @@ export const IconTouchId = (p: P) => (
     <path d="M12 12v2.5a16 16 0 0 1-3 8.5M6.6 15.5a14 14 0 0 1-.9 4.3M3.6 15.8c.2 1 .2 2-.1 3" />
   </Base>
 );
+export const IconScale = (p: P) => (
+  <Base {...p}>
+    <path d="M12 3v18M5 7h14M8 21h8" />
+    <path d="M7 7l-3 7a3 3 0 0 0 6 0L7 7zM17 7l-3 7a3 3 0 0 0 6 0l-3-7z" />
+  </Base>
+);
+export const IconUpload = (p: P) => (
+  <Base {...p}>
+    <path d="M12 15V4M7.5 8.5L12 4l4.5 4.5" />
+    <path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
+  </Base>
+);

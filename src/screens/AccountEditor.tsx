@@ -19,6 +19,8 @@ export function AccountEditor({
   const { uid, accounts, rates, user, valueIn } = useStore();
   const { closing, close } = useSheetExit(onClose);
   const isNew = !account;
+  // La cuenta fija de efectivo: su saldo sale de los movimientos y no se puede eliminar
+  const isCash = !!account?.cash;
   const [isGroup, setIsGroup] = useState(account?.isGroup ?? false);
   const [parent, setParent] = useState<string | null>(account?.parentId ?? parentId ?? null);
   const groups = accounts.filter((a) => a.isGroup && a.id !== account?.id);
@@ -64,10 +66,11 @@ export function AccountEditor({
               kind: account?.kind ?? 'asset',
               currency,
               color,
-              balance: amount ?? 0,
+              balance: isCash ? account!.balance : (amount ?? 0),
               includeInTotal: include,
               order: account?.order ?? accounts.length,
               parentId: parent,
+              ...(isCash ? { cash: true } : {}),
             },
         accounts,
         rates,
@@ -194,7 +197,12 @@ export function AccountEditor({
         </div>
       </div>
 
-      {isGroup ? (
+      {isCash ? (
+        <p className="hint">
+          Es tu cuenta de efectivo: su saldo ({formatMoney(account!.balance, account!.currency)}) se calcula con los
+          ingresos y gastos que apuntas en su ficha.
+        </p>
+      ) : isGroup ? (
         <p className="hint">
           No tiene saldo propio: su saldo es la suma de sus subcuentas, cada una con su divisa e historial. Añádelas
           desde su ficha o mueve dentro cuentas que ya tienes desde su «Editar».
@@ -283,7 +291,7 @@ export function AccountEditor({
       <button type="button" className="btn btn-primary" onClick={save} disabled={!valid || busy}>
         {isNew ? (parentId ? 'Crear subcuenta' : 'Crear cuenta') : 'Guardar cambios'}
       </button>
-      {!isNew && (
+      {!isNew && !isCash && (
         <button type="button" className="btn btn-danger" onClick={remove} disabled={busy}>
           Eliminar cuenta
         </button>

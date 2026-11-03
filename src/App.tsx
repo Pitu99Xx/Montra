@@ -6,7 +6,7 @@ import { IconBriefcase, IconChart, IconGear, IconGrid, IconWallet } from './comp
 import { Sidebar } from './components/Sidebar';
 import { DESKTOP_QUERY, useMedia } from './lib/useMedia';
 import { claimOrCheckOwner, saveUser, type OwnerState } from './data/actions';
-import type { Account, Entry, Movement, Project, Reminder, ThemePref } from './data/model';
+import type { Account, CashMovement, Entry, Movement, Project, Reminder, ThemePref } from './data/model';
 import { StoreProvider, useStore } from './data/store';
 import { lockSuppressed } from './lib/lockGuard';
 import { lockOnReturn, lockOnStartup, markActive, markHidden, setGraceMinutes } from './lib/lockTimer';
@@ -26,6 +26,8 @@ import { ReminderEditor } from './screens/ReminderEditor';
 import { SettingsScreen } from './screens/Settings';
 import { UpdateBalances } from './screens/UpdateBalances';
 import { ProjectDetail } from './screens/ProjectDetail';
+import { CashDetail } from './screens/CashDetail';
+import { CashCountSheet, CashImportSheet, CashMovementEditor } from './screens/CashEditors';
 import { MovementEditor, ProjectEditor, ProjectMinEditor } from './screens/ProjectEditors';
 
 // La gráfica (Recharts) se carga solo al abrir «Evolución»
@@ -110,6 +112,9 @@ type SheetState =
   | { kind: 'project'; project: Project | null }
   | { kind: 'movement'; project: Project; movement: Movement | null }
   | { kind: 'projectMin' }
+  | { kind: 'cashMove'; account: Account; movement: CashMovement | null; type: 'income' | 'expense' }
+  | { kind: 'cashCount'; account: Account }
+  | { kind: 'cashImport'; account: Account }
   | null;
 
 function wantsUpdate(url: string) {
@@ -277,6 +282,9 @@ function Shell({ authUser }: { authUser: User }) {
     );
 
   const close = () => setSheet(null);
+  // Los registros de la cuenta de efectivo salen de sus movimientos: se abre su ficha en lugar de editarlos
+  const editEntry = (entry: Entry, account: Account) =>
+    account.cash ? openDetail(account.id) : setSheet({ kind: 'entry', entry, account });
 
   return (
     <div className={`app${isDesktop ? ' desk' : ''}`}>
@@ -302,7 +310,7 @@ function Shell({ authUser }: { authUser: User }) {
                 onOpen={(account) => openDetail(account.id)}
                 onCreate={() => setSheet({ kind: 'account', account: null })}
                 onUpdateAll={() => setSheet({ kind: 'update' })}
-                onEditEntry={(entry, account) => setSheet({ kind: 'entry', entry, account })}
+                onEditEntry={editEntry}
               />
             </Suspense>
           )}
@@ -316,7 +324,7 @@ function Shell({ authUser }: { authUser: User }) {
           )}
           {tab === 'evolucion' && (
             <Suspense fallback={<Splash />}>
-              <EvolutionScreen onEditEntry={(entry, account) => setSheet({ kind: 'entry', entry, account })} />
+              <EvolutionScreen onEditEntry={editEntry} />
             </Suspense>
           )}
           {tab === 'proyectos' && (
@@ -389,6 +397,20 @@ function Shell({ authUser }: { authUser: User }) {
         }
         const acc = accounts.find((a) => a.id === id);
         if (!acc) return null;
+        if (acc.cash)
+          return (
+            <CashDetail
+              key={`${id}-${i}`}
+              account={acc}
+              closing={closing}
+              onBack={closeDetail}
+              onEditAccount={() => setSheet({ kind: 'account', account: acc })}
+              onNew={(type) => setSheet({ kind: 'cashMove', account: acc, movement: null, type })}
+              onEdit={(movement) => setSheet({ kind: 'cashMove', account: acc, movement, type: 'expense' })}
+              onCount={() => setSheet({ kind: 'cashCount', account: acc })}
+              onImport={() => setSheet({ kind: 'cashImport', account: acc })}
+            />
+          );
         return acc.isGroup ? (
           <GroupDetail
             key={`${id}-${i}`}
@@ -399,7 +421,7 @@ function Shell({ authUser }: { authUser: User }) {
             onOpenChild={(c) => openDetail(c.id)}
             onAddChild={() => setSheet({ kind: 'account', account: null, parentId: acc.id })}
             onUpdateGroup={() => setSheet({ kind: 'update', groupId: acc.id })}
-            onEditEntry={(entry, account) => setSheet({ kind: 'entry', entry, account })}
+            onEditEntry={editEntry}
           />
         ) : (
           <AccountDetail
@@ -429,6 +451,16 @@ function Shell({ authUser }: { authUser: User }) {
         />
       )}
       {sheet?.kind === 'projectMin' && <ProjectMinEditor onClose={close} />}
+      {sheet?.kind === 'cashMove' && (
+        <CashMovementEditor
+          account={sheet.account}
+          movement={sheet.movement}
+          initialKind={sheet.type}
+          onClose={close}
+        />
+      )}
+      {sheet?.kind === 'cashCount' && <CashCountSheet account={sheet.account} onClose={close} />}
+      {sheet?.kind === 'cashImport' && <CashImportSheet account={sheet.account} onClose={close} />}
       {sheet?.kind === 'reminder' && <ReminderEditor reminder={sheet.reminder} onClose={close} />}
       {sheet?.kind === 'currency' && (
         <CurrencyPicker

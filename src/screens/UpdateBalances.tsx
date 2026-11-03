@@ -12,8 +12,9 @@ export function UpdateBalances({ onClose, groupId }: { onClose: () => void; grou
   const { closing, close } = useSheetExit(onClose);
   const group = groupId ? allActive.find((a) => a.id === groupId) : undefined;
   // Solo se apuntan cuentas con saldo propio (las cuentas con subcuentas suman las suyas)
+  // La cuenta de efectivo no se apunta a mano: su saldo sale de sus movimientos
   const accounts = useMemo(
-    () => (groupId ? childrenOf(allActive, groupId) : allActive.filter((a) => !a.isGroup)),
+    () => (groupId ? childrenOf(allActive, groupId) : allActive.filter((a) => !a.isGroup)).filter((a) => !a.cash),
     [allActive, groupId],
   );
   const [values, setValues] = useState<Record<string, string>>(() =>
@@ -86,16 +87,28 @@ export function UpdateBalances({ onClose, groupId }: { onClose: () => void; grou
     </span>
   );
 
-  const plainRow = (a: Account) => (
-    <label key={a.id} className="row" style={{ cursor: 'text' }}>
-      <AccountIcon currency={a.currency} color={a.color} size={38} />
-      <span className="row-main">
-        <span className="row-title">{a.name}</span>
-        <span className="row-sub">{a.currency}</span>
-      </span>
-      {input(a)}
-    </label>
-  );
+  const plainRow = (a: Account) =>
+    a.cash ? (
+      <div key={a.id} className="row">
+        <AccountIcon currency={a.currency} color={a.color} size={38} />
+        <span className="row-main">
+          <span className="row-title">{a.name}</span>
+          <span className="row-sub">Se calcula con sus movimientos</span>
+        </span>
+        <span className="num muted" style={{ fontSize: 18 }}>
+          {formatMoney(a.balance, a.currency)}
+        </span>
+      </div>
+    ) : (
+      <label key={a.id} className="row" style={{ cursor: 'text' }}>
+        <AccountIcon currency={a.currency} color={a.color} size={38} />
+        <span className="row-main">
+          <span className="row-title">{a.name}</span>
+          <span className="row-sub">{a.currency}</span>
+        </span>
+        {input(a)}
+      </label>
+    );
 
   const save = async () => {
     if (invalid) return;
