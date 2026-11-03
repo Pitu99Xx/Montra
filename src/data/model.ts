@@ -86,6 +86,8 @@ export interface UserDoc {
   projectMin?: number | null;
   /** Ya se preparó la cuenta fija «Efectivo» (1.17.0) */
   cashSetupDone?: boolean;
+  /** Ya se dejó un solo registro por día y cuenta en las actualizaciones repetidas (1.19.0) */
+  dailyDedupeDone?: boolean;
 }
 
 export interface SnapshotAccount {

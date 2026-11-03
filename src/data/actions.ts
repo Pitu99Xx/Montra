@@ -15,6 +15,7 @@ import {
 import { db } from '../firebase';
 import { fractionDigits } from '../lib/currency';
 import type { Account, Entry, EntrySource, Rates, Snapshot, UserDoc } from './model';
+import { dayKey } from './series';
 
 export type OwnerState = 'owner' | 'other';
 
@@ -158,17 +159,29 @@ export async function reorderAccounts(uid: string, ordered: Account[]) {
   await batch.commit();
 }
 
-/** «Actualizar saldos»: un registro por cuenta, todos agrupados en la misma actualización. */
+/** Registros que vienen de «Actualizar saldos» (también los convertidos de versiones antiguas). */
+const isUpdate = (e: Entry) => e.source === 'update' || e.source === 'migrated';
+
+/**
+ * «Actualizar saldos»: un registro por cuenta, todos agrupados en la misma actualización.
+ * Si ese mismo día ya se habían actualizado, el registro anterior de cada cuenta se sustituye:
+ * queda solo el último del día.
+ */
 export async function updateBalances(
   uid: string,
   balances: Record<string, number>,
   all: Account[],
   rates: Rates | null,
+  entries: Entry[] = [],
 ) {
   const batch = writeBatch(db);
   const batchId = crypto.randomUUID();
+  const today = dayKey(new Date());
   for (const a of all) {
     if (!(a.id in balances)) continue;
+    for (const e of entries) {
+      if (e.accountId === a.id && isUpdate(e) && dayKey(e.at) === today) batch.delete(doc(entriesCol(uid), e.id));
+    }
     const balance = balances[a.id];
     batch.update(doc(db, 'users', uid, 'accounts', a.id), { balance, updatedAt: serverTimestamp() });
     addEntry(batch, uid, { accountId: a.id, balance, currency: a.currency, source: 'update', batchId }, rates);
@@ -395,4 +408,27 @@ export async function repairZeroDecimalAmounts(uid: string, entries: Entry[], ac
   if (changes) await batch.commit();
   await saveUser(uid, { zeroDecimalFixed: true });
   return changes;
+}
+
+/**
+ * Una sola vez (1.19.0): si un día se actualizaron los saldos varias veces, se deja solo el último
+ * registro de ese día para cada cuenta.
+ */
+export async function dedupeDailyUpdates(uid: string, entries: Entry[]) {
+  const latest = new Map<string, Entry>();
+  for (const e of entries) {
+    if (!isUpdate(e)) continue;
+    const key = `${e.accountId}|${dayKey(e.at)}`;
+    const cur = latest.get(key);
+    if (!cur || e.at > cur.at || (e.at.getTime() === cur.at.getTime() && e.createdAt > cur.createdAt))
+      latest.set(key, e);
+  }
+  const toDelete = entries.filter((e) => isUpdate(e) && latest.get(`${e.accountId}|${dayKey(e.at)}`) !== e);
+  for (let i = 0; i < toDelete.length; i += 450) {
+    const batch = writeBatch(db);
+    for (const e of toDelete.slice(i, i + 450)) batch.delete(doc(entriesCol(uid), e.id));
+    await batch.commit();
+  }
+  await saveUser(uid, { dailyDedupeDone: true });
+  return toDelete.length;
 }

@@ -8,7 +8,7 @@ import { convert, currencySymbol, formatAmount, formatMoney, parseAmount } from 
 
 /** Pantalla para poner al día todos los saldos de una vez (la abre el recordatorio). */
 export function UpdateBalances({ onClose, groupId }: { onClose: () => void; groupId?: string }) {
-  const { uid, accounts: allActive, rates, user, total, valueIn } = useStore();
+  const { uid, accounts: allActive, rates, user, total, valueIn, entries } = useStore();
   const { closing, close } = useSheetExit(onClose);
   const group = groupId ? allActive.find((a) => a.id === groupId) : undefined;
   // Solo se apuntan cuentas con saldo propio (las cuentas con subcuentas suman las suyas)
@@ -114,7 +114,7 @@ export function UpdateBalances({ onClose, groupId }: { onClose: () => void; grou
     if (invalid) return;
     setBusy(true);
     try {
-      await updateBalances(uid, parsed as Record<string, number>, accounts, rates);
+      await updateBalances(uid, parsed as Record<string, number>, accounts, rates, entries);
       toast('Saldos actualizados');
       close();
     } catch (e) {
@@ -189,7 +189,10 @@ export function UpdateBalances({ onClose, groupId }: { onClose: () => void; grou
       <button type="button" className="btn btn-primary" onClick={save} disabled={invalid || busy}>
         Guardar saldos
       </button>
-      <p className="hint">Cada vez que guardas se añade un punto nuevo a la gráfica de evolución.</p>
+      <p className="hint">
+        Cada vez que guardas se añade un punto a la gráfica de evolución. Si ya actualizaste hoy, se sustituye: queda
+        solo la última actualización del día.
+      </p>
     </Sheet>
   );
 }

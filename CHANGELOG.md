@@ -2,6 +2,11 @@
 
 La versión aparece al final de la pestaña **Ajustes**, junto con la fecha y hora de la actualización.
 
+## 1.19.0 · 3 nov 2026
+
+- «Actualizar saldos» deja un solo registro por día: si actualizas varias veces el mismo día, la nueva actualización sustituye a la anterior y en la evolución y en Registros queda solo la última del día.
+- Las actualizaciones repetidas que ya había (varias el mismo día) se limpian solas al abrir esta versión: de cada día se conserva el último registro de cada cuenta.
+
 ## 1.18.1 · 3 nov 2026
 
 - Efectivo: los gastos e ingresos «sin fecha» ahora cuentan en los totales de los últimos 30 días según el lugar que ocupan en la lista (antes se dejaban fuera y un ingreso reciente sin fecha no aparecía).

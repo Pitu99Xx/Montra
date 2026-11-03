@@ -3,7 +3,13 @@ import { collection, doc, onSnapshot, orderBy, query, type Timestamp } from 'fir
 import { db } from '../firebase';
 import { convert } from '../lib/currency';
 import { computeTotalEUR } from './totals';
-import { autoGroupRevolut, migrateSnapshots, repairZeroDecimalAmounts, requestRatesRefresh } from './actions';
+import {
+  autoGroupRevolut,
+  dedupeDailyUpdates,
+  migrateSnapshots,
+  repairZeroDecimalAmounts,
+  requestRatesRefresh,
+} from './actions';
 import { buildSeries, type DayPoint } from './series';
 export { computeTotalEUR } from './totals';
 import {
@@ -218,6 +224,17 @@ export function StoreProvider({ uid, children }: { uid: string; children: ReactN
     entries,
     allAccounts,
   ]);
+
+  // Una sola vez (1.19.0): un solo registro por día y cuenta en las actualizaciones de saldos
+  const deduping = useRef(false);
+  useEffect(() => {
+    if (!userLoaded || !entriesLoaded || !user.entriesMigrated || user.dailyDedupeDone || deduping.current) return;
+    deduping.current = true;
+    dedupeDailyUpdates(uid, entries).catch((e) => {
+      console.error('Registros repetidos', e);
+      deduping.current = false;
+    });
+  }, [userLoaded, entriesLoaded, user.entriesMigrated, user.dailyDedupeDone, uid, entries]);
 
   // Una sola vez (1.17.0): la cuenta «Efectivo» pasa a ser la cuenta fija de efectivo
   const settingCash = useRef(false);
